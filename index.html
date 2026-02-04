@@ -161,6 +161,14 @@
             overflow: hidden;
         }
 
+        .control-box.circle {
+            border-radius: 50%;
+        }
+
+        .control-box.rectangle {
+            border-radius: 6px;
+        }
+
         .control-box:hover {
             border-color: #ffa500;
             box-shadow: 0 0 15px rgba(255, 136, 0, 0.5);
@@ -560,15 +568,63 @@
                 </div>
 
                 <div class="input-group">
+                    <label>形状:</label>
+                    <select id="boxShape" onchange="updateBoxStyle()">
+                        <option value="rectangle">四角</option>
+                        <option value="circle">丸</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>フォント:</label>
+                    <select id="boxFont" onchange="updateBoxStyle()">
+                        <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="'Consolas', monospace">Consolas</option>
+                        <option value="'SF Mono', monospace">SF Mono</option>
+                        <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
                     <label>フォントサイズ (px):</label>
                     <input type="number" id="boxFontSize" value="14" min="8" max="32" oninput="updateBoxStyle()">
+                </div>
+
+                <div class="input-group">
+                    <label>ボックスカラー:</label>
+                    <div class="color-grid">
+                        <div class="color-group">
+                            <label>背景色</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="boxBgColor" value="#ff8800" onchange="updateBoxColor()">
+                                <input type="text" id="boxBgColorText" value="#ff8800" onchange="updateBoxColorFromText('bg')">
+                            </div>
+                        </div>
+                        <div class="color-group">
+                            <label>テキスト色</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="boxTextColor" value="#ffffff" onchange="updateBoxColor()">
+                                <input type="text" id="boxTextColorText" value="#ffffff" onchange="updateBoxColorFromText('text')">
+                            </div>
+                        </div>
+                        <div class="color-group">
+                            <label>ボーダー色</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="boxBorderColor" value="#ff8800" onchange="updateBoxColor()">
+                                <input type="text" id="boxBorderColorText" value="#ff8800" onchange="updateBoxColorFromText('border')">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="margin-top: 15px; padding: 10px; background: rgba(255, 136, 0, 0.1); border-radius: 6px; font-size: 0.85em;">
                     <strong>操作方法:</strong><br>
                     • ドラッグで位置移動<br>
                     • ← → ↑ ↓ で微調整<br>
-                    • Shift + 矢印で10px移動
+                    • Shift + 矢印で10px移動<br>
+                    • S + 矢印でサイズ調整
                 </div>
             </div>
 
@@ -578,6 +634,7 @@
                 <div class="keycode-categories">
                     <button class="category-btn active" onclick="showCategory('basic')">基本</button>
                     <button class="category-btn" onclick="showCategory('mod')">修飾</button>
+                    <button class="category-btn" onclick="showCategory('layer')">レイヤー</button>
                     <button class="category-btn" onclick="showCategory('media')">メディア</button>
                     <button class="category-btn" onclick="showCategory('function')">ファンクション</button>
                     <button class="category-btn" onclick="showCategory('racing')">レーシング</button>
@@ -626,7 +683,9 @@
                     <button class="keycode-btn" data-kc="Enter">Enter</button>
                     <button class="keycode-btn" data-kc="Esc">Esc</button>
                     <button class="keycode-btn" data-kc="Tab">Tab</button>
+                    <div id="basicCustomKeycodes"></div>
                 </div>
+                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('basic')">+ カスタムキー追加</button>
 
                 <!-- 修飾キー -->
                 <div class="keycode-quick" id="modKeycodes">
@@ -644,7 +703,21 @@
                     <button class="keycode-btn" data-kc="Ctrl+Z">Ctrl+Z</button>
                     <button class="keycode-btn" data-kc="Shift+A">Shift+A</button>
                     <button class="keycode-btn" data-kc="Alt+F4">Alt+F4</button>
+                    <div id="modCustomKeycodes"></div>
                 </div>
+                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('mod')">+ カスタムキー追加</button>
+
+                <!-- レイヤー -->
+                <div class="keycode-quick" id="layerKeycodes">
+                    <button class="keycode-btn" data-kc="Layer0">Layer 0</button>
+                    <button class="keycode-btn" data-kc="Layer1">Layer 1</button>
+                    <button class="keycode-btn" data-kc="Layer2">Layer 2</button>
+                    <button class="keycode-btn" data-kc="Layer3">Layer 3</button>
+                    <button class="keycode-btn" data-kc="NextLayer">Next Layer</button>
+                    <button class="keycode-btn" data-kc="PrevLayer">Prev Layer</button>
+                    <div id="layerCustomKeycodes"></div>
+                </div>
+                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('layer')">+ カスタムキー追加</button>
 
                 <!-- メディアキー -->
                 <div class="keycode-quick" id="mediaKeycodes">
@@ -655,7 +728,9 @@
                     <button class="keycode-btn" data-kc="Stop">⏹ Stop</button>
                     <button class="keycode-btn" data-kc="Prev">⏮ Prev</button>
                     <button class="keycode-btn" data-kc="Next">⏭ Next</button>
+                    <div id="mediaCustomKeycodes"></div>
                 </div>
+                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('media')">+ カスタムキー追加</button>
 
                 <!-- ファンクションキー -->
                 <div class="keycode-quick" id="functionKeycodes">
@@ -679,7 +754,9 @@
                     <button class="keycode-btn" data-kc="↓">↓</button>
                     <button class="keycode-btn" data-kc="←">←</button>
                     <button class="keycode-btn" data-kc="→">→</button>
+                    <div id="functionCustomKeycodes"></div>
                 </div>
+                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('function')">+ カスタムキー追加</button>
 
                 <!-- レーシング専用 -->
                 <div class="keycode-quick" id="racingKeycodes">
@@ -703,7 +780,9 @@
                     <button class="keycode-btn" data-kc="LOOK_R">LOOK R</button>
                     <button class="keycode-btn" data-kc="LOOK_B">LOOK B</button>
                     <button class="keycode-btn" data-kc="MAP">MAP</button>
+                    <div id="racingCustomKeycodes"></div>
                 </div>
+                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('racing')">+ カスタムキー追加</button>
 
                 <!-- 特殊 -->
                 <div class="keycode-quick" id="specialKeycodes">
@@ -722,7 +801,9 @@
                     <button class="keycode-btn" data-kc="/">/</button>
                     <button class="keycode-btn" data-kc="\\">\</button>
                     <button class="keycode-btn" data-kc="`">`</button>
+                    <div id="specialCustomKeycodes"></div>
                 </div>
+                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('special')">+ カスタムキー追加</button>
             </div>
         </div>
 
@@ -785,11 +866,19 @@
                     <button class="btn btn-secondary" onclick="exportCSV()">📊 CSV出力</button>
                     <button class="btn btn-secondary" onclick="exportText()">📝 テキスト出力</button>
                 </div>
+                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+                <div class="panel-title">🖼️ 画像エクスポート</div>
+                <div class="actions">
+                    <button class="btn" onclick="exportLayoutImage()">📷 レイアウト画像</button>
+                    <button class="btn btn-secondary" onclick="exportMappedImage()">🗺️ マップ設定画像</button>
+                </div>
                 <div style="margin-top: 15px; padding: 10px; background: rgba(255, 136, 0, 0.1); border-radius: 6px; font-size: 0.85em;">
                     <strong>エクスポート形式:</strong><br>
                     • JSON: 全データを保存（再読込可能）<br>
                     • CSV: レイヤー別キーマップ一覧<br>
-                    • テキスト: 人間が読みやすい形式
+                    • テキスト: 人間が読みやすい形式<br>
+                    • レイアウト画像: コントローラー画像のみ<br>
+                    • マップ設定画像: ボタン配置を含む完全な画像
                 </div>
             </div>
         </div>
@@ -808,6 +897,15 @@
         let dragStartY = 0;
         let dragBoxStartX = 0;
         let dragBoxStartY = 0;
+        let customKeycodes = {
+            basic: [],
+            mod: [],
+            layer: [],
+            media: [],
+            function: [],
+            racing: [],
+            special: []
+        };
 
         // Gist設定
         let gistToken = localStorage.getItem('gist-token-racing') || '';
@@ -865,7 +963,12 @@
                 y: 100,
                 width: 80,
                 height: 50,
-                fontSize: 14
+                fontSize: 14,
+                shape: 'rectangle',
+                bgColor: '#ff8800',
+                textColor: '#ffffff',
+                borderColor: '#ff8800',
+                fontFamily: "'Segoe UI', sans-serif"
             };
             controlBoxes.push(box);
             
@@ -909,6 +1012,16 @@
             document.getElementById('boxWidth').value = box.width;
             document.getElementById('boxHeight').value = box.height;
             document.getElementById('boxFontSize').value = box.fontSize;
+            document.getElementById('boxShape').value = box.shape || 'rectangle';
+            document.getElementById('boxFont').value = box.fontFamily || "'Segoe UI', sans-serif";
+            
+            // カラー設定
+            document.getElementById('boxBgColor').value = box.bgColor || '#ff8800';
+            document.getElementById('boxBgColorText').value = box.bgColor || '#ff8800';
+            document.getElementById('boxTextColor').value = box.textColor || '#ffffff';
+            document.getElementById('boxTextColorText').value = box.textColor || '#ffffff';
+            document.getElementById('boxBorderColor').value = box.borderColor || '#ff8800';
+            document.getElementById('boxBorderColorText').value = box.borderColor || '#ff8800';
             
             document.getElementById('editorPanel').classList.add('visible');
             renderControlBoxes();
@@ -946,6 +1059,39 @@
             if (!box) return;
 
             box.fontSize = parseInt(document.getElementById('boxFontSize').value) || 14;
+            box.shape = document.getElementById('boxShape').value;
+            box.fontFamily = document.getElementById('boxFont').value;
+            renderControlBoxes();
+        }
+
+        function updateBoxColor() {
+            if (selectedBox === null) return;
+            const box = controlBoxes.find(b => b.id === selectedBox);
+            if (!box) return;
+
+            box.bgColor = document.getElementById('boxBgColor').value;
+            box.textColor = document.getElementById('boxTextColor').value;
+            box.borderColor = document.getElementById('boxBorderColor').value;
+            
+            document.getElementById('boxBgColorText').value = box.bgColor;
+            document.getElementById('boxTextColorText').value = box.textColor;
+            document.getElementById('boxBorderColorText').value = box.borderColor;
+            
+            renderControlBoxes();
+        }
+
+        function updateBoxColorFromText(type) {
+            if (selectedBox === null) return;
+            const box = controlBoxes.find(b => b.id === selectedBox);
+            if (!box) return;
+
+            const textValue = document.getElementById(`box${type.charAt(0).toUpperCase() + type.slice(1)}ColorText`).value;
+            document.getElementById(`box${type.charAt(0).toUpperCase() + type.slice(1)}Color`).value = textValue;
+            
+            if (type === 'bg') box.bgColor = textValue;
+            else if (type === 'text') box.textColor = textValue;
+            else if (type === 'border') box.borderColor = textValue;
+            
             renderControlBoxes();
         }
 
@@ -959,6 +1105,7 @@
             controlBoxes.forEach(box => {
                 const el = document.createElement('div');
                 el.className = 'control-box';
+                el.classList.add(box.shape || 'rectangle');
                 el.dataset.boxId = box.id;
                 
                 const keycode = currentLayerData.boxes[box.id] || '';
@@ -969,6 +1116,10 @@
                 el.style.width = (box.width * imageScale) + 'px';
                 el.style.height = (box.height * imageScale) + 'px';
                 el.style.fontSize = (box.fontSize * imageScale) + 'px';
+                el.style.fontFamily = box.fontFamily || "'Segoe UI', sans-serif";
+                el.style.background = box.bgColor || 'rgba(255, 136, 0, 0.3)';
+                el.style.color = box.textColor || '#ffffff';
+                el.style.borderColor = box.borderColor || '#ff8800';
                 
                 if (selectedBox === box.id) {
                     el.classList.add('selected');
@@ -1029,6 +1180,43 @@
             
             const step = e.shiftKey ? 10 : 1;
             
+            // Sキー押下中はサイズ調整モード
+            if (e.key.toLowerCase() === 's' || e.key === 's') {
+                return; // S単体では何もしない
+            }
+            
+            // Sキーが押されている場合はサイズ調整
+            if (e.getModifierState && e.getModifierState('s')) {
+                switch(e.key) {
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        box.width += step;
+                        document.getElementById('boxWidth').value = box.width;
+                        renderControlBoxes();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        box.width = Math.max(20, box.width - step);
+                        document.getElementById('boxWidth').value = box.width;
+                        renderControlBoxes();
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        box.height += step;
+                        document.getElementById('boxHeight').value = box.height;
+                        renderControlBoxes();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        box.height = Math.max(20, box.height - step);
+                        document.getElementById('boxHeight').value = box.height;
+                        renderControlBoxes();
+                        break;
+                }
+                return;
+            }
+            
+            // 通常の位置移動
             switch(e.key) {
                 case 'ArrowRight':
                     e.preventDefault();
@@ -1053,6 +1241,60 @@
             document.getElementById('boxX').value = box.x;
             document.getElementById('boxY').value = box.y;
             renderControlBoxes();
+        });
+
+        // Sキーの状態を追跡
+        let sKeyPressed = false;
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 's' && selectedBox !== null) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    sKeyPressed = true;
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key.toLowerCase() === 's') {
+                sKeyPressed = false;
+            }
+        });
+
+        // Sキー押下中の矢印キー処理を改善
+        document.addEventListener('keydown', (e) => {
+            if (selectedBox === null || !sKeyPressed) return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            const box = controlBoxes.find(b => b.id === selectedBox);
+            if (!box) return;
+            
+            const step = e.shiftKey ? 10 : 1;
+            
+            switch(e.key) {
+                case 'ArrowRight':
+                    e.preventDefault();
+                    box.width += step;
+                    document.getElementById('boxWidth').value = box.width;
+                    renderControlBoxes();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    box.width = Math.max(20, box.width - step);
+                    document.getElementById('boxWidth').value = box.width;
+                    renderControlBoxes();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    box.height += step;
+                    document.getElementById('boxHeight').value = box.height;
+                    renderControlBoxes();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    box.height = Math.max(20, box.height - step);
+                    document.getElementById('boxHeight').value = box.height;
+                    renderControlBoxes();
+                    break;
+            }
         });
 
         // ==================== LAYER MANAGEMENT ====================
@@ -1152,6 +1394,83 @@
             event.target.classList.add('active');
         }
 
+        // カスタムキーコード追加
+        function addCustomKeycode(category) {
+            const keycode = prompt('追加するキーコードを入力してください:');
+            if (!keycode) return;
+            
+            const label = prompt('ボタンに表示するラベルを入力してください:', keycode);
+            if (!label) return;
+            
+            customKeycodes[category].push({ keycode, label });
+            renderCustomKeycodes(category);
+            saveCustomKeycodesToLocal();
+        }
+
+        function renderCustomKeycodes(category) {
+            const container = document.getElementById(category + 'CustomKeycodes');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            customKeycodes[category].forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'keycode-btn';
+                btn.dataset.kc = item.keycode;
+                btn.textContent = item.label;
+                btn.style.position = 'relative';
+                
+                // 削除ボタン
+                const deleteBtn = document.createElement('span');
+                deleteBtn.textContent = '×';
+                deleteBtn.style.cssText = `
+                    position: absolute;
+                    top: -5px;
+                    right: -5px;
+                    background: rgba(255, 68, 68, 0.8);
+                    color: white;
+                    border-radius: 50%;
+                    width: 16px;
+                    height: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    cursor: pointer;
+                    opacity: 0;
+                    transition: opacity 0.2s;
+                `;
+                
+                btn.onmouseenter = () => deleteBtn.style.opacity = '1';
+                btn.onmouseleave = () => deleteBtn.style.opacity = '0';
+                
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm(`"${item.label}"を削除しますか？`)) {
+                        customKeycodes[category].splice(index, 1);
+                        renderCustomKeycodes(category);
+                        saveCustomKeycodesToLocal();
+                    }
+                };
+                
+                btn.appendChild(deleteBtn);
+                container.appendChild(btn);
+            });
+        }
+
+        function saveCustomKeycodesToLocal() {
+            localStorage.setItem('custom-keycodes-racing', JSON.stringify(customKeycodes));
+        }
+
+        function loadCustomKeycodesFromLocal() {
+            const saved = localStorage.getItem('custom-keycodes-racing');
+            if (saved) {
+                customKeycodes = JSON.parse(saved);
+                Object.keys(customKeycodes).forEach(category => {
+                    renderCustomKeycodes(category);
+                });
+            }
+        }
+
         // キーコードボタンクリック
         document.querySelectorAll('.keycode-quick').forEach(container => {
             container.addEventListener('click', (e) => {
@@ -1198,7 +1517,8 @@
                 layers,
                 controlBoxes,
                 imageData: img.src,
-                imageScale
+                imageScale,
+                customKeycodes
             };
 
             const gistData = {
@@ -1270,6 +1590,9 @@
                 layers = data.layers;
                 controlBoxes = data.controlBoxes;
                 imageScale = data.imageScale || 1.0;
+                customKeycodes = data.customKeycodes || {
+                    basic: [], mod: [], layer: [], media: [], function: [], racing: [], special: []
+                };
                 currentLayer = 0;
 
                 const img = document.getElementById('controllerImage');
@@ -1284,6 +1607,9 @@
                 renderLayerTabs();
                 renderControlBoxes();
                 updateLayerBadge();
+                Object.keys(customKeycodes).forEach(category => {
+                    renderCustomKeycodes(category);
+                });
                 
                 alert('✓ Gistから読み込みました！');
             } catch (err) {
@@ -1297,7 +1623,8 @@
                 layers,
                 controlBoxes,
                 imageData: img.src,
-                imageScale
+                imageScale,
+                customKeycodes
             };
             localStorage.setItem('sim-racing-keymap', JSON.stringify(data));
             alert('保存しました！');
@@ -1310,6 +1637,9 @@
                 layers = data.layers;
                 controlBoxes = data.controlBoxes;
                 imageScale = data.imageScale || 1.0;
+                customKeycodes = data.customKeycodes || {
+                    basic: [], mod: [], layer: [], media: [], function: [], racing: [], special: []
+                };
                 currentLayer = 0;
 
                 const img = document.getElementById('controllerImage');
@@ -1320,6 +1650,9 @@
                 renderLayerTabs();
                 renderControlBoxes();
                 updateLayerBadge();
+                Object.keys(customKeycodes).forEach(category => {
+                    renderCustomKeycodes(category);
+                });
                 
                 alert('読み込みました！');
             } else {
@@ -1352,7 +1685,8 @@
                 layers,
                 controlBoxes,
                 imageData: img.src,
-                imageScale
+                imageScale,
+                customKeycodes
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             downloadBlob(blob, 'racing-keymap.json');
@@ -1396,6 +1730,90 @@
             downloadBlob(blob, 'racing-keymap.txt');
         }
 
+        function exportLayoutImage() {
+            const img = document.getElementById('controllerImage');
+            if (!img.src || img.src === '') {
+                alert('画像が読み込まれていません');
+                return;
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            
+            canvas.toBlob((blob) => {
+                downloadBlob(blob, 'controller-layout.png');
+            });
+        }
+
+        function exportMappedImage() {
+            const img = document.getElementById('controllerImage');
+            if (!img.src || img.src === '') {
+                alert('画像が読み込まれていません');
+                return;
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // 背景画像を描画
+            ctx.drawImage(img, 0, 0);
+            
+            // ボックスを描画
+            const currentLayerData = layers[currentLayer];
+            if (currentLayerData) {
+                controlBoxes.forEach(box => {
+                    const x = box.x;
+                    const y = box.y;
+                    const w = box.width;
+                    const h = box.height;
+                    
+                    // 背景
+                    ctx.fillStyle = box.bgColor || '#ff8800';
+                    if (box.shape === 'circle') {
+                        const centerX = x + w / 2;
+                        const centerY = y + h / 2;
+                        const radius = Math.min(w, h) / 2;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(x, y, w, h);
+                    }
+                    
+                    // ボーダー
+                    ctx.strokeStyle = box.borderColor || '#ff8800';
+                    ctx.lineWidth = 2;
+                    if (box.shape === 'circle') {
+                        const centerX = x + w / 2;
+                        const centerY = y + h / 2;
+                        const radius = Math.min(w, h) / 2;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                    } else {
+                        ctx.strokeRect(x, y, w, h);
+                    }
+                    
+                    // テキスト
+                    const keycode = currentLayerData.boxes[box.id] || `BTN${box.id}`;
+                    ctx.fillStyle = box.textColor || '#ffffff';
+                    ctx.font = `${box.fontSize}px ${box.fontFamily || 'Arial'}`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(keycode, x + w / 2, y + h / 2);
+                });
+            }
+            
+            canvas.toBlob((blob) => {
+                downloadBlob(blob, `controller-mapped-layer${currentLayer}.png`);
+            });
+        }
+
         function downloadBlob(blob, filename) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1410,6 +1828,7 @@
         // ==================== INITIALIZATION ====================
         renderLayerTabs();
         updateLayerBadge();
+        loadCustomKeycodesFromLocal();
     </script>
 </body>
 </html>
