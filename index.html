@@ -180,9 +180,9 @@
             z-index: 1000;
         }
 
-        .control-box.editing {
-            outline: 3px solid #00d4ff;
-            outline-offset: 2px;
+        .control-box.copying {
+            opacity: 0.5;
+            border-style: dashed;
         }
 
         /* エディターパネル */
@@ -486,6 +486,30 @@
             padding: 8px 12px;
             color: #fff;
         }
+
+        /* 画像選択 */
+        .image-select {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .image-option {
+            padding: 8px 16px;
+            background: rgba(255, 136, 0, 0.1);
+            border: 2px solid rgba(255, 136, 0, 0.3);
+            border-radius: 6px;
+            color: #ff8800;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .image-option:hover {
+            background: rgba(255, 136, 0, 0.2);
+            border-color: #ff8800;
+        }
     </style>
 </head>
 <body>
@@ -523,6 +547,10 @@
                 
                 <button class="btn btn-small" onclick="addControlBox()">+ ボタン追加</button>
                 <button class="btn btn-small btn-secondary" onclick="deleteSelectedBox()">🗑️ 削除</button>
+            </div>
+
+            <div class="image-select" id="imageSelect" style="display: none;">
+                <div style="width: 100%; color: #aaa; font-size: 0.9em;">同じ階層の画像ファイル:</div>
             </div>
 
             <div class="layout-wrapper">
@@ -622,9 +650,9 @@
                 <div style="margin-top: 15px; padding: 10px; background: rgba(255, 136, 0, 0.1); border-radius: 6px; font-size: 0.85em;">
                     <strong>操作方法:</strong><br>
                     • ドラッグで位置移動<br>
-                    • ← → ↑ ↓ で微調整<br>
-                    • Shift + 矢印で10px移動<br>
-                    • S + 矢印でサイズ調整
+                    • ← → ↑ ↓ で1px移動<br>
+                    • Shift + 矢印でサイズ調整<br>
+                    • Ctrl + ドラッグでコピー
                 </div>
             </div>
 
@@ -683,9 +711,7 @@
                     <button class="keycode-btn" data-kc="Enter">Enter</button>
                     <button class="keycode-btn" data-kc="Esc">Esc</button>
                     <button class="keycode-btn" data-kc="Tab">Tab</button>
-                    <div id="basicCustomKeycodes"></div>
                 </div>
-                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('basic')">+ カスタムキー追加</button>
 
                 <!-- 修飾キー -->
                 <div class="keycode-quick" id="modKeycodes">
@@ -703,9 +729,7 @@
                     <button class="keycode-btn" data-kc="Ctrl+Z">Ctrl+Z</button>
                     <button class="keycode-btn" data-kc="Shift+A">Shift+A</button>
                     <button class="keycode-btn" data-kc="Alt+F4">Alt+F4</button>
-                    <div id="modCustomKeycodes"></div>
                 </div>
-                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('mod')">+ カスタムキー追加</button>
 
                 <!-- レイヤー -->
                 <div class="keycode-quick" id="layerKeycodes">
@@ -715,9 +739,7 @@
                     <button class="keycode-btn" data-kc="Layer3">Layer 3</button>
                     <button class="keycode-btn" data-kc="NextLayer">Next Layer</button>
                     <button class="keycode-btn" data-kc="PrevLayer">Prev Layer</button>
-                    <div id="layerCustomKeycodes"></div>
                 </div>
-                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('layer')">+ カスタムキー追加</button>
 
                 <!-- メディアキー -->
                 <div class="keycode-quick" id="mediaKeycodes">
@@ -728,9 +750,7 @@
                     <button class="keycode-btn" data-kc="Stop">⏹ Stop</button>
                     <button class="keycode-btn" data-kc="Prev">⏮ Prev</button>
                     <button class="keycode-btn" data-kc="Next">⏭ Next</button>
-                    <div id="mediaCustomKeycodes"></div>
                 </div>
-                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('media')">+ カスタムキー追加</button>
 
                 <!-- ファンクションキー -->
                 <div class="keycode-quick" id="functionKeycodes">
@@ -754,9 +774,7 @@
                     <button class="keycode-btn" data-kc="↓">↓</button>
                     <button class="keycode-btn" data-kc="←">←</button>
                     <button class="keycode-btn" data-kc="→">→</button>
-                    <div id="functionCustomKeycodes"></div>
                 </div>
-                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('function')">+ カスタムキー追加</button>
 
                 <!-- レーシング専用 -->
                 <div class="keycode-quick" id="racingKeycodes">
@@ -780,9 +798,7 @@
                     <button class="keycode-btn" data-kc="LOOK_R">LOOK R</button>
                     <button class="keycode-btn" data-kc="LOOK_B">LOOK B</button>
                     <button class="keycode-btn" data-kc="MAP">MAP</button>
-                    <div id="racingCustomKeycodes"></div>
                 </div>
-                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('racing')">+ カスタムキー追加</button>
 
                 <!-- 特殊 -->
                 <div class="keycode-quick" id="specialKeycodes">
@@ -801,9 +817,7 @@
                     <button class="keycode-btn" data-kc="/">/</button>
                     <button class="keycode-btn" data-kc="\\">\</button>
                     <button class="keycode-btn" data-kc="`">`</button>
-                    <div id="specialCustomKeycodes"></div>
                 </div>
-                <button class="btn btn-small btn-secondary" style="margin-top: 8px;" onclick="addCustomKeycode('special')">+ カスタムキー追加</button>
             </div>
         </div>
 
@@ -829,7 +843,8 @@
                             <input type="text" id="gistId" placeholder="Gist ID (保存後に自動入力、または読み込み時に入力)">
                         </div>
                         <div style="font-size: 0.85em; color: #888; margin-top: 5px;">
-                            ※ トークンは <a href="https://github.com/settings/tokens" target="_blank" style="color: #ff8800;">GitHub Settings</a> から作成 (gist権限のみでOK)
+                            ※ トークンは <a href="https://github.com/settings/tokens" target="_blank" style="color: #ff8800;">GitHub Settings</a> から作成 (gist権限のみでOK)<br>
+                            ※ トークンとIDは一度入力すればブラウザに保存されます
                         </div>
                     </div>
                     <div class="actions" style="margin-top: 10px;">
@@ -866,19 +881,14 @@
                     <button class="btn btn-secondary" onclick="exportCSV()">📊 CSV出力</button>
                     <button class="btn btn-secondary" onclick="exportText()">📝 テキスト出力</button>
                 </div>
-                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
-                <div class="panel-title">🖼️ 画像エクスポート</div>
-                <div class="actions">
-                    <button class="btn" onclick="exportLayoutImage()">📷 レイアウト画像</button>
-                    <button class="btn btn-secondary" onclick="exportMappedImage()">🗺️ マップ設定画像</button>
-                </div>
                 <div style="margin-top: 15px; padding: 10px; background: rgba(255, 136, 0, 0.1); border-radius: 6px; font-size: 0.85em;">
                     <strong>エクスポート形式:</strong><br>
                     • JSON: 全データを保存（再読込可能）<br>
                     • CSV: レイヤー別キーマップ一覧<br>
                     • テキスト: 人間が読みやすい形式<br>
-                    • レイアウト画像: コントローラー画像のみ<br>
-                    • マップ設定画像: ボタン配置を含む完全な画像
+                    <br>
+                    <strong>画像出力について:</strong><br>
+                    スクリーンショット機能をご利用ください
                 </div>
             </div>
         </div>
@@ -893,19 +903,11 @@
         let nextBoxId = 1;
         let imageScale = 1.0;
         let isDragging = false;
+        let isCopying = false;
         let dragStartX = 0;
         let dragStartY = 0;
         let dragBoxStartX = 0;
         let dragBoxStartY = 0;
-        let customKeycodes = {
-            basic: [],
-            mod: [],
-            layer: [],
-            media: [],
-            function: [],
-            racing: [],
-            special: []
-        };
 
         // Gist設定
         let gistToken = localStorage.getItem('gist-token-racing') || '';
@@ -936,6 +938,55 @@
                 }
             };
             reader.readAsDataURL(file);
+        }
+
+        // 同じ階層の.pngファイルを読み込む機能
+        async function loadLocalPngImages() {
+            try {
+                // GitHub Pages上では相対パスでアクセスを試みる
+                const pngFiles = [
+                    'controller1.png',
+                    'controller2.png', 
+                    'buttonbox.png',
+                    'wheel.png'
+                ];
+                
+                const imageSelect = document.getElementById('imageSelect');
+                imageSelect.innerHTML = '<div style="width: 100%; color: #aaa; font-size: 0.9em;">同じ階層の画像ファイル:</div>';
+                
+                for (const filename of pngFiles) {
+                    // 画像の存在確認
+                    const img = new Image();
+                    img.src = filename;
+                    
+                    img.onload = () => {
+                        const btn = document.createElement('div');
+                        btn.className = 'image-option';
+                        btn.textContent = filename;
+                        btn.onclick = () => loadImageFromPath(filename);
+                        imageSelect.appendChild(btn);
+                        imageSelect.style.display = 'flex';
+                    };
+                }
+            } catch (err) {
+                console.log('ローカル画像の読み込みに失敗:', err);
+            }
+        }
+
+        function loadImageFromPath(path) {
+            const img = document.getElementById('controllerImage');
+            img.src = path;
+            img.style.display = 'block';
+            
+            if (layers.length === 0) {
+                layers.push({
+                    name: 'Default',
+                    boxes: {}
+                });
+                currentLayer = 0;
+                renderLayerTabs();
+                updateLayerBadge();
+            }
         }
 
         function zoomIn() {
@@ -1135,12 +1186,32 @@
                 el.onmousedown = (e) => {
                     if (e.button !== 0) return;
                     e.preventDefault();
+                    
+                    // Ctrl押下でコピーモード
+                    if (e.ctrlKey || e.metaKey) {
+                        isCopying = true;
+                        // 新しいボックスを作成
+                        const newBox = JSON.parse(JSON.stringify(box));
+                        newBox.id = nextBoxId++;
+                        controlBoxes.push(newBox);
+                        
+                        // 各レイヤーにキーコードをコピー
+                        layers.forEach(layer => {
+                            layer.boxes[newBox.id] = layer.boxes[box.id] || '';
+                        });
+                        
+                        selectBox(newBox.id);
+                        el.classList.add('copying');
+                    } else {
+                        isCopying = false;
+                        selectBox(box.id);
+                    }
+                    
                     isDragging = true;
                     dragStartX = e.clientX;
                     dragStartY = e.clientY;
-                    dragBoxStartX = box.x;
-                    dragBoxStartY = box.y;
-                    selectBox(box.id);
+                    dragBoxStartX = selectedBox ? controlBoxes.find(b => b.id === selectedBox).x : box.x;
+                    dragBoxStartY = selectedBox ? controlBoxes.find(b => b.id === selectedBox).y : box.y;
                 };
                 
                 container.appendChild(el);
@@ -1168,6 +1239,7 @@
 
         document.addEventListener('mouseup', () => {
             isDragging = false;
+            isCopying = false;
         });
 
         // キーボードナビゲーション
@@ -1178,37 +1250,30 @@
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
             
-            const step = e.shiftKey ? 10 : 1;
-            
-            // Sキー押下中はサイズ調整モード
-            if (e.key.toLowerCase() === 's' || e.key === 's') {
-                return; // S単体では何もしない
-            }
-            
-            // Sキーが押されている場合はサイズ調整
-            if (e.getModifierState && e.getModifierState('s')) {
+            // Shift押下中はサイズ調整
+            if (e.shiftKey) {
                 switch(e.key) {
                     case 'ArrowRight':
                         e.preventDefault();
-                        box.width += step;
+                        box.width += 1;
                         document.getElementById('boxWidth').value = box.width;
                         renderControlBoxes();
                         break;
                     case 'ArrowLeft':
                         e.preventDefault();
-                        box.width = Math.max(20, box.width - step);
+                        box.width = Math.max(20, box.width - 1);
                         document.getElementById('boxWidth').value = box.width;
                         renderControlBoxes();
                         break;
                     case 'ArrowDown':
                         e.preventDefault();
-                        box.height += step;
+                        box.height += 1;
                         document.getElementById('boxHeight').value = box.height;
                         renderControlBoxes();
                         break;
                     case 'ArrowUp':
                         e.preventDefault();
-                        box.height = Math.max(20, box.height - step);
+                        box.height = Math.max(20, box.height - 1);
                         document.getElementById('boxHeight').value = box.height;
                         renderControlBoxes();
                         break;
@@ -1216,23 +1281,23 @@
                 return;
             }
             
-            // 通常の位置移動
+            // 通常の位置移動（1pxずつ）
             switch(e.key) {
                 case 'ArrowRight':
                     e.preventDefault();
-                    box.x += step;
+                    box.x += 1;
                     break;
                 case 'ArrowLeft':
                     e.preventDefault();
-                    box.x -= step;
+                    box.x -= 1;
                     break;
                 case 'ArrowDown':
                     e.preventDefault();
-                    box.y += step;
+                    box.y += 1;
                     break;
                 case 'ArrowUp':
                     e.preventDefault();
-                    box.y -= step;
+                    box.y -= 1;
                     break;
                 default:
                     return;
@@ -1241,60 +1306,6 @@
             document.getElementById('boxX').value = box.x;
             document.getElementById('boxY').value = box.y;
             renderControlBoxes();
-        });
-
-        // Sキーの状態を追跡
-        let sKeyPressed = false;
-        document.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 's' && selectedBox !== null) {
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                    sKeyPressed = true;
-                }
-            }
-        });
-        
-        document.addEventListener('keyup', (e) => {
-            if (e.key.toLowerCase() === 's') {
-                sKeyPressed = false;
-            }
-        });
-
-        // Sキー押下中の矢印キー処理を改善
-        document.addEventListener('keydown', (e) => {
-            if (selectedBox === null || !sKeyPressed) return;
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            const box = controlBoxes.find(b => b.id === selectedBox);
-            if (!box) return;
-            
-            const step = e.shiftKey ? 10 : 1;
-            
-            switch(e.key) {
-                case 'ArrowRight':
-                    e.preventDefault();
-                    box.width += step;
-                    document.getElementById('boxWidth').value = box.width;
-                    renderControlBoxes();
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    box.width = Math.max(20, box.width - step);
-                    document.getElementById('boxWidth').value = box.width;
-                    renderControlBoxes();
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    box.height += step;
-                    document.getElementById('boxHeight').value = box.height;
-                    renderControlBoxes();
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    box.height = Math.max(20, box.height - step);
-                    document.getElementById('boxHeight').value = box.height;
-                    renderControlBoxes();
-                    break;
-            }
         });
 
         // ==================== LAYER MANAGEMENT ====================
@@ -1394,83 +1405,6 @@
             event.target.classList.add('active');
         }
 
-        // カスタムキーコード追加
-        function addCustomKeycode(category) {
-            const keycode = prompt('追加するキーコードを入力してください:');
-            if (!keycode) return;
-            
-            const label = prompt('ボタンに表示するラベルを入力してください:', keycode);
-            if (!label) return;
-            
-            customKeycodes[category].push({ keycode, label });
-            renderCustomKeycodes(category);
-            saveCustomKeycodesToLocal();
-        }
-
-        function renderCustomKeycodes(category) {
-            const container = document.getElementById(category + 'CustomKeycodes');
-            if (!container) return;
-            
-            container.innerHTML = '';
-            customKeycodes[category].forEach((item, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'keycode-btn';
-                btn.dataset.kc = item.keycode;
-                btn.textContent = item.label;
-                btn.style.position = 'relative';
-                
-                // 削除ボタン
-                const deleteBtn = document.createElement('span');
-                deleteBtn.textContent = '×';
-                deleteBtn.style.cssText = `
-                    position: absolute;
-                    top: -5px;
-                    right: -5px;
-                    background: rgba(255, 68, 68, 0.8);
-                    color: white;
-                    border-radius: 50%;
-                    width: 16px;
-                    height: 16px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 12px;
-                    cursor: pointer;
-                    opacity: 0;
-                    transition: opacity 0.2s;
-                `;
-                
-                btn.onmouseenter = () => deleteBtn.style.opacity = '1';
-                btn.onmouseleave = () => deleteBtn.style.opacity = '0';
-                
-                deleteBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    if (confirm(`"${item.label}"を削除しますか？`)) {
-                        customKeycodes[category].splice(index, 1);
-                        renderCustomKeycodes(category);
-                        saveCustomKeycodesToLocal();
-                    }
-                };
-                
-                btn.appendChild(deleteBtn);
-                container.appendChild(btn);
-            });
-        }
-
-        function saveCustomKeycodesToLocal() {
-            localStorage.setItem('custom-keycodes-racing', JSON.stringify(customKeycodes));
-        }
-
-        function loadCustomKeycodesFromLocal() {
-            const saved = localStorage.getItem('custom-keycodes-racing');
-            if (saved) {
-                customKeycodes = JSON.parse(saved);
-                Object.keys(customKeycodes).forEach(category => {
-                    renderCustomKeycodes(category);
-                });
-            }
-        }
-
         // キーコードボタンクリック
         document.querySelectorAll('.keycode-quick').forEach(container => {
             container.addEventListener('click', (e) => {
@@ -1517,8 +1451,7 @@
                 layers,
                 controlBoxes,
                 imageData: img.src,
-                imageScale,
-                customKeycodes
+                imageScale
             };
 
             const gistData = {
@@ -1587,17 +1520,16 @@
                 const fileContent = result.files['racing-keymap-data.json'].content;
                 const data = JSON.parse(fileContent);
 
-                layers = data.layers;
-                controlBoxes = data.controlBoxes;
+                layers = data.layers || [];
+                controlBoxes = data.controlBoxes || [];
                 imageScale = data.imageScale || 1.0;
-                customKeycodes = data.customKeycodes || {
-                    basic: [], mod: [], layer: [], media: [], function: [], racing: [], special: []
-                };
                 currentLayer = 0;
 
                 const img = document.getElementById('controllerImage');
-                img.src = data.imageData;
-                img.style.display = 'block';
+                if (data.imageData) {
+                    img.src = data.imageData;
+                    img.style.display = 'block';
+                }
 
                 gistId = inputGistId;
                 document.getElementById('gistId').value = gistId;
@@ -1607,9 +1539,6 @@
                 renderLayerTabs();
                 renderControlBoxes();
                 updateLayerBadge();
-                Object.keys(customKeycodes).forEach(category => {
-                    renderCustomKeycodes(category);
-                });
                 
                 alert('✓ Gistから読み込みました！');
             } catch (err) {
@@ -1618,45 +1547,55 @@
         }
 
         function saveToLocal() {
-            const img = document.getElementById('controllerImage');
-            const data = {
-                layers,
-                controlBoxes,
-                imageData: img.src,
-                imageScale,
-                customKeycodes
-            };
-            localStorage.setItem('sim-racing-keymap', JSON.stringify(data));
-            alert('保存しました！');
+            try {
+                const img = document.getElementById('controllerImage');
+                const data = {
+                    layers,
+                    controlBoxes,
+                    imageData: img.src,
+                    imageScale
+                };
+                const jsonString = JSON.stringify(data);
+                localStorage.setItem('sim-racing-keymap', jsonString);
+                alert('✓ ブラウザに保存しました！');
+            } catch (err) {
+                console.error('保存エラー:', err);
+                if (err.name === 'QuotaExceededError') {
+                    alert('❌ 保存容量を超えています。画像サイズが大きすぎる可能性があります。');
+                } else {
+                    alert('❌ 保存に失敗しました: ' + err.message);
+                }
+            }
         }
 
         function loadFromLocal() {
-            const saved = localStorage.getItem('sim-racing-keymap');
-            if (saved) {
-                const data = JSON.parse(saved);
-                layers = data.layers;
-                controlBoxes = data.controlBoxes;
-                imageScale = data.imageScale || 1.0;
-                customKeycodes = data.customKeycodes || {
-                    basic: [], mod: [], layer: [], media: [], function: [], racing: [], special: []
-                };
-                currentLayer = 0;
+            try {
+                const saved = localStorage.getItem('sim-racing-keymap');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    layers = data.layers || [];
+                    controlBoxes = data.controlBoxes || [];
+                    imageScale = data.imageScale || 1.0;
+                    currentLayer = 0;
 
-                const img = document.getElementById('controllerImage');
-                img.src = data.imageData;
-                img.style.display = 'block';
+                    const img = document.getElementById('controllerImage');
+                    if (data.imageData) {
+                        img.src = data.imageData;
+                        img.style.display = 'block';
+                    }
 
-                updateImageScale();
-                renderLayerTabs();
-                renderControlBoxes();
-                updateLayerBadge();
-                Object.keys(customKeycodes).forEach(category => {
-                    renderCustomKeycodes(category);
-                });
-                
-                alert('読み込みました！');
-            } else {
-                alert('保存されたデータがありません');
+                    updateImageScale();
+                    renderLayerTabs();
+                    renderControlBoxes();
+                    updateLayerBadge();
+                    
+                    alert('✓ ブラウザから読み込みました！');
+                } else {
+                    alert('保存されたデータがありません');
+                }
+            } catch (err) {
+                console.error('読込エラー:', err);
+                alert('❌ 読み込みに失敗しました: ' + err.message);
             }
         }
 
@@ -1685,8 +1624,7 @@
                 layers,
                 controlBoxes,
                 imageData: img.src,
-                imageScale,
-                customKeycodes
+                imageScale
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             downloadBlob(blob, 'racing-keymap.json');
@@ -1730,90 +1668,6 @@
             downloadBlob(blob, 'racing-keymap.txt');
         }
 
-        function exportLayoutImage() {
-            const img = document.getElementById('controllerImage');
-            if (!img.src || img.src === '') {
-                alert('画像が読み込まれていません');
-                return;
-            }
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            
-            canvas.toBlob((blob) => {
-                downloadBlob(blob, 'controller-layout.png');
-            });
-        }
-
-        function exportMappedImage() {
-            const img = document.getElementById('controllerImage');
-            if (!img.src || img.src === '') {
-                alert('画像が読み込まれていません');
-                return;
-            }
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            const ctx = canvas.getContext('2d');
-            
-            // 背景画像を描画
-            ctx.drawImage(img, 0, 0);
-            
-            // ボックスを描画
-            const currentLayerData = layers[currentLayer];
-            if (currentLayerData) {
-                controlBoxes.forEach(box => {
-                    const x = box.x;
-                    const y = box.y;
-                    const w = box.width;
-                    const h = box.height;
-                    
-                    // 背景
-                    ctx.fillStyle = box.bgColor || '#ff8800';
-                    if (box.shape === 'circle') {
-                        const centerX = x + w / 2;
-                        const centerY = y + h / 2;
-                        const radius = Math.min(w, h) / 2;
-                        ctx.beginPath();
-                        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                        ctx.fill();
-                    } else {
-                        ctx.fillRect(x, y, w, h);
-                    }
-                    
-                    // ボーダー
-                    ctx.strokeStyle = box.borderColor || '#ff8800';
-                    ctx.lineWidth = 2;
-                    if (box.shape === 'circle') {
-                        const centerX = x + w / 2;
-                        const centerY = y + h / 2;
-                        const radius = Math.min(w, h) / 2;
-                        ctx.beginPath();
-                        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                        ctx.stroke();
-                    } else {
-                        ctx.strokeRect(x, y, w, h);
-                    }
-                    
-                    // テキスト
-                    const keycode = currentLayerData.boxes[box.id] || `BTN${box.id}`;
-                    ctx.fillStyle = box.textColor || '#ffffff';
-                    ctx.font = `${box.fontSize}px ${box.fontFamily || 'Arial'}`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(keycode, x + w / 2, y + h / 2);
-                });
-            }
-            
-            canvas.toBlob((blob) => {
-                downloadBlob(blob, `controller-mapped-layer${currentLayer}.png`);
-            });
-        }
-
         function downloadBlob(blob, filename) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1828,7 +1682,7 @@
         // ==================== INITIALIZATION ====================
         renderLayerTabs();
         updateLayerBadge();
-        loadCustomKeycodesFromLocal();
+        loadLocalPngImages();
     </script>
 </body>
 </html>
