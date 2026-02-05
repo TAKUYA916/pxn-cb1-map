@@ -487,6 +487,50 @@
             color: #fff;
         }
 
+        /* カラーパレット */
+        .color-palette {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+
+        .palette-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .palette-color:hover {
+            transform: scale(1.1);
+            border-color: #ff8800;
+        }
+
+        .palette-add {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            background: rgba(255, 136, 0, 0.2);
+            border: 2px dashed rgba(255, 136, 0, 0.5);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ff8800;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .palette-add:hover {
+            background: rgba(255, 136, 0, 0.3);
+        }
+
         /* 画像選択 */
         .image-select {
             display: flex;
@@ -629,6 +673,7 @@
                                 <input type="color" id="boxBgColor" value="#ff8800" onchange="updateBoxColor()">
                                 <input type="text" id="boxBgColorText" value="#ff8800" onchange="updateBoxColorFromText('bg')">
                             </div>
+                            <div class="color-palette" id="bgColorPalette"></div>
                         </div>
                         <div class="color-group">
                             <label>テキスト色</label>
@@ -636,6 +681,7 @@
                                 <input type="color" id="boxTextColor" value="#ffffff" onchange="updateBoxColor()">
                                 <input type="text" id="boxTextColorText" value="#ffffff" onchange="updateBoxColorFromText('text')">
                             </div>
+                            <div class="color-palette" id="textColorPalette"></div>
                         </div>
                         <div class="color-group">
                             <label>ボーダー色</label>
@@ -643,6 +689,7 @@
                                 <input type="color" id="boxBorderColor" value="#ff8800" onchange="updateBoxColor()">
                                 <input type="text" id="boxBorderColorText" value="#ff8800" onchange="updateBoxColorFromText('border')">
                             </div>
+                            <div class="color-palette" id="borderColorPalette"></div>
                         </div>
                     </div>
                 </div>
@@ -856,9 +903,32 @@
                 <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
 
                 <div style="margin-bottom: 20px;">
-                    <h4 style="color: #ff8800; margin-bottom: 10px;">ローカル保存</h4>
+                    <h4 style="color: #ff8800; margin-bottom: 10px;">ローカル保存（複数スロット）</h4>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px; color: #aaa; font-size: 0.9em;">
+                            保存スロット選択:
+                        </label>
+                        <select id="saveSlot" style="width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 8px; color: #fff;">
+                            <option value="slot1">スロット1 (ハンドルコントローラー用)</option>
+                            <option value="slot2">スロット2 (ボタンボックス用)</option>
+                            <option value="slot3">スロット3 (予備)</option>
+                            <option value="slot4">スロット4 (予備)</option>
+                            <option value="slot5">スロット5 (予備)</option>
+                        </select>
+                    </div>
                     <div class="actions">
-                        <button class="btn" onclick="saveToLocal()">💾 ブラウザに保存</button>
+                        <button class="btn" onclick="saveToLocalSlot()">💾 スロットに保存</button>
+                        <button class="btn btn-secondary" onclick="loadFromLocalSlot()">📂 スロットから読込</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteLocalSlot()">🗑️ スロット削除</button>
+                    </div>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #ff8800; margin-bottom: 10px;">簡易保存（1つのみ）</h4>
+                    <div class="actions">
+                        <button class="btn btn-secondary" onclick="saveToLocal()">💾 ブラウザに保存</button>
                         <button class="btn btn-secondary" onclick="loadFromLocal()">📂 ブラウザから読込</button>
                     </div>
                 </div>
@@ -908,6 +978,8 @@
         let dragStartY = 0;
         let dragBoxStartX = 0;
         let dragBoxStartY = 0;
+        let colorHistory = [];
+        const MAX_COLORS = 12;
 
         // Gist設定
         let gistToken = localStorage.getItem('gist-token-racing') || '';
@@ -943,14 +1015,12 @@
         // 同じ階層の.pngファイルを読み込む機能
         async function loadLocalPngImages() {
             try {
-                // 画像読み込み追記可能 
                 // GitHub Pages上では相対パスでアクセスを試みる
                 const pngFiles = [
                     'controller1.png',
-                    'pxn_cb1.png', 
+                    'controller2.png', 
                     'buttonbox.png',
-                    'wheel.png',
-                    'gtneo.png'
+                    'wheel.png'
                 ];
                 
                 const imageSelect = document.getElementById('imageSelect');
@@ -1130,6 +1200,11 @@
             document.getElementById('boxTextColorText').value = box.textColor;
             document.getElementById('boxBorderColorText').value = box.borderColor;
             
+            // カラー履歴に追加
+            addToColorHistory(box.bgColor);
+            addToColorHistory(box.textColor);
+            addToColorHistory(box.borderColor);
+            
             renderControlBoxes();
         }
 
@@ -1146,6 +1221,65 @@
             else if (type === 'border') box.borderColor = textValue;
             
             renderControlBoxes();
+        }
+
+        // カラーパレット機能
+        function addToColorHistory(color) {
+            if (!color || color === '') return;
+            // 重複チェック
+            if (colorHistory.includes(color)) {
+                // 既存の色を先頭に移動
+                colorHistory = colorHistory.filter(c => c !== color);
+            }
+            colorHistory.unshift(color);
+            // 最大12色まで
+            if (colorHistory.length > MAX_COLORS) {
+                colorHistory = colorHistory.slice(0, MAX_COLORS);
+            }
+            renderColorPalette();
+        }
+
+        function renderColorPalette() {
+            const palettes = ['bgColorPalette', 'textColorPalette', 'borderColorPalette'];
+            
+            palettes.forEach(paletteId => {
+                const palette = document.getElementById(paletteId);
+                if (!palette) return;
+                
+                palette.innerHTML = '';
+                
+                colorHistory.forEach(color => {
+                    const colorDiv = document.createElement('div');
+                    colorDiv.className = 'palette-color';
+                    colorDiv.style.background = color;
+                    colorDiv.title = color;
+                    colorDiv.onclick = () => {
+                        const type = paletteId.replace('ColorPalette', '');
+                        applyPaletteColor(type, color);
+                    };
+                    palette.appendChild(colorDiv);
+                });
+                
+                // +ボタン（現在の色を追加）
+                const addBtn = document.createElement('div');
+                addBtn.className = 'palette-add';
+                addBtn.textContent = '+';
+                addBtn.title = '現在の色を保存';
+                addBtn.onclick = () => {
+                    const type = paletteId.replace('ColorPalette', '');
+                    const inputId = `box${type.charAt(0).toUpperCase() + type.slice(1)}Color`;
+                    const currentColor = document.getElementById(inputId).value;
+                    addToColorHistory(currentColor);
+                };
+                palette.appendChild(addBtn);
+            });
+        }
+
+        function applyPaletteColor(type, color) {
+            const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
+            document.getElementById(`box${capitalizedType}Color`).value = color;
+            document.getElementById(`box${capitalizedType}ColorText`).value = color;
+            updateBoxColor();
         }
 
         function renderControlBoxes() {
@@ -1453,7 +1587,9 @@
                 layers,
                 controlBoxes,
                 imageData: img.src,
-                imageScale
+                imageScale,
+                nextBoxId,
+                colorHistory
             };
 
             const gistData = {
@@ -1525,6 +1661,8 @@
                 layers = data.layers || [];
                 controlBoxes = data.controlBoxes || [];
                 imageScale = data.imageScale || 1.0;
+                nextBoxId = data.nextBoxId || 1;
+                colorHistory = data.colorHistory || [];
                 currentLayer = 0;
 
                 const img = document.getElementById('controllerImage');
@@ -1541,6 +1679,7 @@
                 renderLayerTabs();
                 renderControlBoxes();
                 updateLayerBadge();
+                renderColorPalette();
                 
                 alert('✓ Gistから読み込みました！');
             } catch (err) {
@@ -1548,6 +1687,27 @@
             }
         }
 
+
+
+        function clearAll() {
+            if (confirm('全てのデータをクリアしますか？')) {
+                layers = [];
+                controlBoxes = [];
+                selectedBox = null;
+                currentLayer = 0;
+                nextBoxId = 1;
+                imageScale = 1.0;
+                
+                document.getElementById('controllerImage').style.display = 'none';
+                document.getElementById('editorPanel').classList.remove('visible');
+                
+                renderLayerTabs();
+                renderControlBoxes();
+                updateLayerBadge();
+            }
+        }
+
+        // スロット保存機能
         function saveToLocal() {
             try {
                 const img = document.getElementById('controllerImage');
@@ -1555,7 +1715,9 @@
                     layers,
                     controlBoxes,
                     imageData: img.src,
-                    imageScale
+                    imageScale,
+                    nextBoxId,
+                    colorHistory
                 };
                 const jsonString = JSON.stringify(data);
                 localStorage.setItem('sim-racing-keymap', jsonString);
@@ -1578,6 +1740,8 @@
                     layers = data.layers || [];
                     controlBoxes = data.controlBoxes || [];
                     imageScale = data.imageScale || 1.0;
+                    nextBoxId = data.nextBoxId || 1;
+                    colorHistory = data.colorHistory || [];
                     currentLayer = 0;
 
                     const img = document.getElementById('controllerImage');
@@ -1590,6 +1754,7 @@
                     renderLayerTabs();
                     renderControlBoxes();
                     updateLayerBadge();
+                    renderColorPalette();
                     
                     alert('✓ ブラウザから読み込みました！');
                 } else {
@@ -1601,21 +1766,77 @@
             }
         }
 
-        function clearAll() {
-            if (confirm('全てのデータをクリアしますか？')) {
-                layers = [];
-                controlBoxes = [];
-                selectedBox = null;
-                currentLayer = 0;
-                nextBoxId = 1;
-                imageScale = 1.0;
+        function saveToLocalSlot() {
+            try {
+                const slot = document.getElementById('saveSlot').value;
+                const img = document.getElementById('controllerImage');
+                const data = {
+                    layers,
+                    controlBoxes,
+                    imageData: img.src,
+                    imageScale,
+                    nextBoxId,
+                    colorHistory,
+                    savedAt: new Date().toISOString()
+                };
+                const jsonString = JSON.stringify(data);
+                localStorage.setItem(`sim-racing-keymap-${slot}`, jsonString);
                 
-                document.getElementById('controllerImage').style.display = 'none';
-                document.getElementById('editorPanel').classList.remove('visible');
-                
-                renderLayerTabs();
-                renderControlBoxes();
-                updateLayerBadge();
+                const slotName = document.getElementById('saveSlot').selectedOptions[0].text;
+                alert(`✓ ${slotName}に保存しました！`);
+            } catch (err) {
+                console.error('保存エラー:', err);
+                if (err.name === 'QuotaExceededError') {
+                    alert('❌ 保存容量を超えています。');
+                } else {
+                    alert('❌ 保存に失敗しました: ' + err.message);
+                }
+            }
+        }
+
+        function loadFromLocalSlot() {
+            try {
+                const slot = document.getElementById('saveSlot').value;
+                const saved = localStorage.getItem(`sim-racing-keymap-${slot}`);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    layers = data.layers || [];
+                    controlBoxes = data.controlBoxes || [];
+                    imageScale = data.imageScale || 1.0;
+                    nextBoxId = data.nextBoxId || 1;
+                    colorHistory = data.colorHistory || [];
+                    currentLayer = 0;
+
+                    const img = document.getElementById('controllerImage');
+                    if (data.imageData) {
+                        img.src = data.imageData;
+                        img.style.display = 'block';
+                    }
+
+                    updateImageScale();
+                    renderLayerTabs();
+                    renderControlBoxes();
+                    updateLayerBadge();
+                    renderColorPalette();
+                    
+                    const slotName = document.getElementById('saveSlot').selectedOptions[0].text;
+                    alert(`✓ ${slotName}から読み込みました！`);
+                } else {
+                    const slotName = document.getElementById('saveSlot').selectedOptions[0].text;
+                    alert(`${slotName}には保存されたデータがありません`);
+                }
+            } catch (err) {
+                console.error('読込エラー:', err);
+                alert('❌ 読み込みに失敗しました: ' + err.message);
+            }
+        }
+
+        function deleteLocalSlot() {
+            const slot = document.getElementById('saveSlot').value;
+            const slotName = document.getElementById('saveSlot').selectedOptions[0].text;
+            if (confirm(`${slotName}のデータを削除しますか？`)) {
+                localStorage.removeItem(`sim-racing-keymap-${slot}`);
+                alert(`✓ ${slotName}を削除しました`);
             }
         }
 
@@ -1685,6 +1906,7 @@
         renderLayerTabs();
         updateLayerBadge();
         loadLocalPngImages();
+        renderColorPalette();
     </script>
 </body>
 </html>
