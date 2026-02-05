@@ -576,19 +576,19 @@
         <!-- レイアウトエリア -->
         <div class="panel">
             <div class="panel-title">🎮 コントローラーレイアウト</div>
-            
+
             <div class="toolbar">
                 <label for="imageUpload" class="btn btn-small">
                     📷 画像を読み込む
                 </label>
                 <input type="file" id="imageUpload" accept="image/*" onchange="loadImage(event)">
-                
+
                 <div class="zoom-controls">
                     <button class="zoom-btn" onclick="zoomOut()">−</button>
                     <span id="zoomLevel">100%</span>
                     <button class="zoom-btn" onclick="zoomIn()">+</button>
                 </div>
-                
+
                 <button class="btn btn-small" onclick="addControlBox()">+ ボタン追加</button>
                 <button class="btn btn-small btn-secondary" onclick="deleteSelectedBox()">🗑️ 削除</button>
             </div>
@@ -609,7 +609,7 @@
         <div class="panel editor-panel" id="editorPanel">
             <div class="editor-section">
                 <h3>🔧 ボタン設定 <span id="selectedBoxId" style="font-size: 0.9em; color: #aaa;"></span></h3>
-                
+
                 <div class="input-group">
                     <label>キーコード:</label>
                     <input type="text" id="keycodeInput" placeholder="例: A" oninput="updateKeycode(this.value)">
@@ -705,7 +705,7 @@
 
             <div class="editor-section">
                 <h3>⌨️ キーコード選択</h3>
-                
+
                 <div class="keycode-categories">
                     <button class="category-btn active" onclick="showCategory('basic')">基本</button>
                     <button class="category-btn" onclick="showCategory('mod')">修飾</button>
@@ -987,6 +987,18 @@
         if (gistToken) document.getElementById('gistToken').value = gistToken;
         if (gistId) document.getElementById('gistId').value = gistId;
 
+        // ==================== ID MANAGEMENT (FIX) ====================
+        // 読込後にIDの整合性を合わせる補助関数
+        function refreshNextBoxId(savedNextId) {
+            if (controlBoxes.length > 0) {
+                const maxId = Math.max(...controlBoxes.map(b => b.id));
+                // 保存値と実際の最大値+1の大きい方を採用
+                nextBoxId = Math.max(savedNextId || 0, maxId + 1);
+            } else {
+                nextBoxId = savedNextId || 1;
+            }
+        }
+
         // ==================== IMAGE HANDLING ====================
         function loadImage(event) {
             const file = event.target.files[0];
@@ -997,13 +1009,10 @@
                 const img = document.getElementById('controllerImage');
                 img.src = e.target.result;
                 img.style.display = 'block';
-                
+
                 // 初期レイヤー作成
                 if (layers.length === 0) {
-                    layers.push({
-                        name: 'Default',
-                        boxes: {}
-                    });
+                    layers.push({ name: 'Default', boxes: {} });
                     currentLayer = 0;
                     renderLayerTabs();
                     updateLayerBadge();
@@ -1018,21 +1027,21 @@
                 // GitHub Pages上では相対パスでアクセスを試みる
                 const pngFiles = [
                     'controller1.png',
-                    'controller2.png', 
+                    'controller2.png',
                     'buttonbox.png',
                     'wheel.png',
-                    'pxn_cb1.png',
-                    'gtneo.png'
+                    'gtneo.png',
+                    'pxn_cb1'
                 ];
-                
+
                 const imageSelect = document.getElementById('imageSelect');
                 imageSelect.innerHTML = '<div style="width: 100%; color: #aaa; font-size: 0.9em;">同じ階層の画像ファイル:</div>';
-                
+
                 for (const filename of pngFiles) {
                     // 画像の存在確認
                     const img = new Image();
                     img.src = filename;
-                    
+
                     img.onload = () => {
                         const btn = document.createElement('div');
                         btn.className = 'image-option';
@@ -1042,36 +1051,23 @@
                         imageSelect.style.display = 'flex';
                     };
                 }
-            } catch (err) {
-                console.log('ローカル画像の読み込みに失敗:', err);
-            }
+            } catch (err) { console.log('ローカル画像の読み込みに失敗:', err); }
         }
 
         function loadImageFromPath(path) {
             const img = document.getElementById('controllerImage');
             img.src = path;
             img.style.display = 'block';
-            
             if (layers.length === 0) {
-                layers.push({
-                    name: 'Default',
-                    boxes: {}
-                });
+                layers.push({ name: 'Default', boxes: {} });
                 currentLayer = 0;
                 renderLayerTabs();
                 updateLayerBadge();
             }
         }
 
-        function zoomIn() {
-            imageScale = Math.min(imageScale + 0.1, 3.0);
-            updateImageScale();
-        }
-
-        function zoomOut() {
-            imageScale = Math.max(imageScale - 0.1, 0.3);
-            updateImageScale();
-        }
+        function zoomIn() { imageScale = Math.min(imageScale + 0.1, 3.0); updateImageScale(); }
+        function zoomOut() { imageScale = Math.max(imageScale - 0.1, 0.3); updateImageScale(); }
 
         function updateImageScale() {
             const img = document.getElementById('controllerImage');
@@ -1084,39 +1080,21 @@
         function addControlBox() {
             const box = {
                 id: nextBoxId++,
-                x: 100,
-                y: 100,
-                width: 80,
-                height: 50,
-                fontSize: 14,
-                shape: 'rectangle',
-                bgColor: '#ff8800',
-                textColor: '#ffffff',
-                borderColor: '#ff8800',
-                fontFamily: "'Segoe UI', sans-serif"
+                x: 100, y: 100, width: 80, height: 50, fontSize: 14,
+                shape: 'rectangle', bgColor: '#ff8800', textColor: '#ffffff',
+                borderColor: '#ff8800', fontFamily: "'Segoe UI', sans-serif"
             };
             controlBoxes.push(box);
-            
-            // 各レイヤーにキーコードを追加
-            layers.forEach(layer => {
-                layer.boxes[box.id] = '';
-            });
-            
+            layers.forEach(layer => { layer.boxes[box.id] = ''; });
             renderControlBoxes();
             selectBox(box.id);
         }
 
         function deleteSelectedBox() {
-            if (selectedBox === null) {
-                alert('ボタンを選択してください');
-                return;
-            }
-            
+            if (selectedBox === null) { alert('ボタンを選択してください'); return; }
             if (confirm('このボタンを削除しますか？')) {
                 controlBoxes = controlBoxes.filter(b => b.id !== selectedBox);
-                layers.forEach(layer => {
-                    delete layer.boxes[selectedBox];
-                });
+                layers.forEach(layer => { delete layer.boxes[selectedBox]; });
                 selectedBox = null;
                 renderControlBoxes();
                 document.getElementById('editorPanel').classList.remove('visible');
@@ -1129,7 +1107,6 @@
             if (!box) return;
 
             const keycode = layers[currentLayer]?.boxes[boxId] || '';
-            
             document.getElementById('selectedBoxId').textContent = `(Button ${boxId})`;
             document.getElementById('keycodeInput').value = keycode;
             document.getElementById('boxX').value = box.x;
@@ -1139,7 +1116,7 @@
             document.getElementById('boxFontSize').value = box.fontSize;
             document.getElementById('boxShape').value = box.shape || 'rectangle';
             document.getElementById('boxFont').value = box.fontFamily || "'Segoe UI', sans-serif";
-            
+
             // カラー設定
             document.getElementById('boxBgColor').value = box.bgColor || '#ff8800';
             document.getElementById('boxBgColorText').value = box.bgColor || '#ff8800';
@@ -1147,7 +1124,6 @@
             document.getElementById('boxTextColorText').value = box.textColor || '#ffffff';
             document.getElementById('boxBorderColor').value = box.borderColor || '#ff8800';
             document.getElementById('boxBorderColorText').value = box.borderColor || '#ff8800';
-            
             document.getElementById('editorPanel').classList.add('visible');
             renderControlBoxes();
         }
@@ -1162,7 +1138,6 @@
             if (selectedBox === null) return;
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
-
             box.x = parseInt(document.getElementById('boxX').value) || 0;
             box.y = parseInt(document.getElementById('boxY').value) || 0;
             renderControlBoxes();
@@ -1172,7 +1147,6 @@
             if (selectedBox === null) return;
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
-
             box.width = parseInt(document.getElementById('boxWidth').value) || 60;
             box.height = parseInt(document.getElementById('boxHeight').value) || 40;
             renderControlBoxes();
@@ -1182,7 +1156,6 @@
             if (selectedBox === null) return;
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
-
             box.fontSize = parseInt(document.getElementById('boxFontSize').value) || 14;
             box.shape = document.getElementById('boxShape').value;
             box.fontFamily = document.getElementById('boxFont').value;
@@ -1193,20 +1166,13 @@
             if (selectedBox === null) return;
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
-
             box.bgColor = document.getElementById('boxBgColor').value;
             box.textColor = document.getElementById('boxTextColor').value;
             box.borderColor = document.getElementById('boxBorderColor').value;
-            
             document.getElementById('boxBgColorText').value = box.bgColor;
             document.getElementById('boxTextColorText').value = box.textColor;
             document.getElementById('boxBorderColorText').value = box.borderColor;
-            
-            // カラー履歴に追加
-            addToColorHistory(box.bgColor);
-            addToColorHistory(box.textColor);
-            addToColorHistory(box.borderColor);
-            
+            addToColorHistory(box.bgColor); addToColorHistory(box.textColor); addToColorHistory(box.borderColor);
             renderControlBoxes();
         }
 
@@ -1214,63 +1180,44 @@
             if (selectedBox === null) return;
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
-
             const textValue = document.getElementById(`box${type.charAt(0).toUpperCase() + type.slice(1)}ColorText`).value;
             document.getElementById(`box${type.charAt(0).toUpperCase() + type.slice(1)}Color`).value = textValue;
-            
             if (type === 'bg') box.bgColor = textValue;
             else if (type === 'text') box.textColor = textValue;
             else if (type === 'border') box.borderColor = textValue;
-            
             renderControlBoxes();
         }
 
-        // カラーパレット機能
         function addToColorHistory(color) {
-            if (!color || color === '') return;
-            // 重複チェック
-            if (colorHistory.includes(color)) {
-                // 既存の色を先頭に移動
-                colorHistory = colorHistory.filter(c => c !== color);
-            }
+            if (!color) return;
+            colorHistory = colorHistory.filter(c => c !== color);
             colorHistory.unshift(color);
-            // 最大12色まで
-            if (colorHistory.length > MAX_COLORS) {
-                colorHistory = colorHistory.slice(0, MAX_COLORS);
-            }
+            if (colorHistory.length > MAX_COLORS) colorHistory = colorHistory.slice(0, MAX_COLORS);
             renderColorPalette();
         }
 
         function renderColorPalette() {
             const palettes = ['bgColorPalette', 'textColorPalette', 'borderColorPalette'];
-            
             palettes.forEach(paletteId => {
                 const palette = document.getElementById(paletteId);
                 if (!palette) return;
-                
                 palette.innerHTML = '';
-                
                 colorHistory.forEach(color => {
                     const colorDiv = document.createElement('div');
-                    colorDiv.className = 'palette-color';
-                    colorDiv.style.background = color;
-                    colorDiv.title = color;
+                    colorDiv.className = 'palette-color'; colorDiv.style.background = color; colorDiv.title = color;
                     colorDiv.onclick = () => {
                         const type = paletteId.replace('ColorPalette', '');
                         applyPaletteColor(type, color);
                     };
                     palette.appendChild(colorDiv);
                 });
-                
+
                 // +ボタン（現在の色を追加）
                 const addBtn = document.createElement('div');
-                addBtn.className = 'palette-add';
-                addBtn.textContent = '+';
-                addBtn.title = '現在の色を保存';
+                addBtn.className = 'palette-add'; addBtn.textContent = '+'; addBtn.title = '現在の色を保存';
                 addBtn.onclick = () => {
                     const type = paletteId.replace('ColorPalette', '');
-                    const inputId = `box${type.charAt(0).toUpperCase() + type.slice(1)}Color`;
-                    const currentColor = document.getElementById(inputId).value;
+                    const currentColor = document.getElementById(`box${type.charAt(0).toUpperCase() + type.slice(1)}Color`).value;
                     addToColorHistory(currentColor);
                 };
                 palette.appendChild(addBtn);
@@ -1278,53 +1225,35 @@
         }
 
         function applyPaletteColor(type, color) {
-            const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
-            document.getElementById(`box${capitalizedType}Color`).value = color;
-            document.getElementById(`box${capitalizedType}ColorText`).value = color;
+            const cap = type.charAt(0).toUpperCase() + type.slice(1);
+            document.getElementById(`box${cap}Color`).value = color;
+            document.getElementById(`box${cap}ColorText`).value = color;
             updateBoxColor();
         }
 
         function renderControlBoxes() {
             const container = document.getElementById('controlBoxes');
             container.innerHTML = '';
-
             const currentLayerData = layers[currentLayer];
             if (!currentLayerData) return;
 
             controlBoxes.forEach(box => {
                 const el = document.createElement('div');
-                el.className = 'control-box';
-                el.classList.add(box.shape || 'rectangle');
+                el.className = 'control-box'; el.classList.add(box.shape || 'rectangle');
                 el.dataset.boxId = box.id;
-                
                 const keycode = currentLayerData.boxes[box.id] || '';
                 el.textContent = keycode || `BTN${box.id}`;
-                
-                el.style.left = (box.x * imageScale) + 'px';
-                el.style.top = (box.y * imageScale) + 'px';
-                el.style.width = (box.width * imageScale) + 'px';
-                el.style.height = (box.height * imageScale) + 'px';
-                el.style.fontSize = (box.fontSize * imageScale) + 'px';
-                el.style.fontFamily = box.fontFamily || "'Segoe UI', sans-serif";
-                el.style.background = box.bgColor || 'rgba(255, 136, 0, 0.3)';
-                el.style.color = box.textColor || '#ffffff';
-                el.style.borderColor = box.borderColor || '#ff8800';
-                
-                if (selectedBox === box.id) {
-                    el.classList.add('selected');
-                }
-                
+                el.style.left = (box.x * imageScale) + 'px'; el.style.top = (box.y * imageScale) + 'px';
+                el.style.width = (box.width * imageScale) + 'px'; el.style.height = (box.height * imageScale) + 'px';
+                el.style.fontSize = (box.fontSize * imageScale) + 'px'; el.style.fontFamily = box.fontFamily;
+                el.style.background = box.bgColor; el.style.color = box.textColor; el.style.borderColor = box.borderColor;
+                if (selectedBox === box.id) el.classList.add('selected');
                 // クリックで選択
-                el.onclick = (e) => {
-                    e.stopPropagation();
-                    selectBox(box.id);
-                };
 
+                el.onclick = (e) => { e.stopPropagation(); selectBox(box.id); };
                 // ドラッグ開始
                 el.onmousedown = (e) => {
-                    if (e.button !== 0) return;
-                    e.preventDefault();
-                    
+                    if (e.button !== 0) return; e.preventDefault();
                     // Ctrl押下でコピーモード
                     if (e.ctrlKey || e.metaKey) {
                         isCopying = true;
@@ -1332,117 +1261,55 @@
                         const newBox = JSON.parse(JSON.stringify(box));
                         newBox.id = nextBoxId++;
                         controlBoxes.push(newBox);
-                        
                         // 各レイヤーにキーコードをコピー
-                        layers.forEach(layer => {
-                            layer.boxes[newBox.id] = layer.boxes[box.id] || '';
-                        });
-                        
+                        layers.forEach(l => { l.boxes[newBox.id] = l.boxes[box.id] || ''; });
                         selectBox(newBox.id);
                         el.classList.add('copying');
-                    } else {
-                        isCopying = false;
-                        selectBox(box.id);
-                    }
-                    
-                    isDragging = true;
-                    dragStartX = e.clientX;
-                    dragStartY = e.clientY;
-                    dragBoxStartX = selectedBox ? controlBoxes.find(b => b.id === selectedBox).x : box.x;
-                    dragBoxStartY = selectedBox ? controlBoxes.find(b => b.id === selectedBox).y : box.y;
+                    } else { isCopying = false; selectBox(box.id); }
+                    isDragging = true; dragStartX = e.clientX; dragStartY = e.clientY;
+                    const targetBox = controlBoxes.find(b => b.id === (isCopying ? nextBoxId - 1 : box.id));
+                    dragBoxStartX = targetBox.x; dragBoxStartY = targetBox.y;
                 };
-                
                 container.appendChild(el);
             });
         }
 
-        // ドラッグ処理
         document.addEventListener('mousemove', (e) => {
             if (!isDragging || selectedBox === null) return;
-            
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
-            
-            const dx = (e.clientX - dragStartX) / imageScale;
-            const dy = (e.clientY - dragStartY) / imageScale;
-            
-            box.x = Math.round(dragBoxStartX + dx);
-            box.y = Math.round(dragBoxStartY + dy);
-            
+            box.x = Math.round(dragBoxStartX + (e.clientX - dragStartX) / imageScale);
+            box.y = Math.round(dragBoxStartY + (e.clientY - dragStartY) / imageScale);
             document.getElementById('boxX').value = box.x;
             document.getElementById('boxY').value = box.y;
-            
             renderControlBoxes();
         });
 
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            isCopying = false;
-        });
+        document.addEventListener('mouseup', () => { isDragging = false; isCopying = false; });
 
         // キーボードナビゲーション
         document.addEventListener('keydown', (e) => {
-            if (selectedBox === null) return;
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
+            if (selectedBox === null || e.target.tagName === 'INPUT') return;
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
-            
+
             // Shift押下中はサイズ調整
             if (e.shiftKey) {
-                switch(e.key) {
-                    case 'ArrowRight':
-                        e.preventDefault();
-                        box.width += 1;
-                        document.getElementById('boxWidth').value = box.width;
-                        renderControlBoxes();
-                        break;
-                    case 'ArrowLeft':
-                        e.preventDefault();
-                        box.width = Math.max(20, box.width - 1);
-                        document.getElementById('boxWidth').value = box.width;
-                        renderControlBoxes();
-                        break;
-                    case 'ArrowDown':
-                        e.preventDefault();
-                        box.height += 1;
-                        document.getElementById('boxHeight').value = box.height;
-                        renderControlBoxes();
-                        break;
-                    case 'ArrowUp':
-                        e.preventDefault();
-                        box.height = Math.max(20, box.height - 1);
-                        document.getElementById('boxHeight').value = box.height;
-                        renderControlBoxes();
-                        break;
-                }
-                return;
+                if (e.key === 'ArrowRight') box.width += 1;
+                else if (e.key === 'ArrowLeft') box.width = Math.max(10, box.width - 1);
+                else if (e.key === 'ArrowDown') box.height += 1;
+                else if (e.key === 'ArrowUp') box.height = Math.max(10, box.height - 1);
+                else return;
+            } else {
+                if (e.key === 'ArrowRight') box.x += 1;
+                else if (e.key === 'ArrowLeft') box.x -= 1;
+                else if (e.key === 'ArrowDown') box.y += 1;
+                else if (e.key === 'ArrowUp') box.y -= 1;
+                else return;
             }
-            
-            // 通常の位置移動（1pxずつ）
-            switch(e.key) {
-                case 'ArrowRight':
-                    e.preventDefault();
-                    box.x += 1;
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    box.x -= 1;
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    box.y += 1;
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    box.y -= 1;
-                    break;
-                default:
-                    return;
-            }
-            
-            document.getElementById('boxX').value = box.x;
-            document.getElementById('boxY').value = box.y;
+            e.preventDefault();
+            document.getElementById('boxX').value = box.x; document.getElementById('boxY').value = box.y;
+            document.getElementById('boxWidth').value = box.width; document.getElementById('boxHeight').value = box.height;
             renderControlBoxes();
         });
 
@@ -1450,465 +1317,173 @@
         function renderLayerTabs() {
             const container = document.getElementById('layerTabs');
             container.innerHTML = '';
-
             layers.forEach((layer, index) => {
                 const tab = document.createElement('button');
-                tab.className = 'layer-tab';
-                if (index === currentLayer) tab.classList.add('active');
-
-                const span = document.createElement('span');
-                span.textContent = layer.name;
-                tab.appendChild(span);
-
+                tab.className = 'layer-tab'; if (index === currentLayer) tab.classList.add('active');
+                const span = document.createElement('span'); span.textContent = layer.name; tab.appendChild(span);
                 if (layers.length > 1) {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-layer';
-                    deleteBtn.textContent = '×';
-                    deleteBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        deleteLayer(index);
-                    };
-                    tab.appendChild(deleteBtn);
+                    const del = document.createElement('button'); del.className = 'delete-layer'; del.textContent = '×';
+                    del.onclick = (e) => { e.stopPropagation(); deleteLayer(index); }; tab.appendChild(del);
                 }
-
-                tab.onclick = () => switchLayer(index);
-                container.appendChild(tab);
+                tab.onclick = () => switchLayer(index); container.appendChild(tab);
             });
-
             const addBtn = document.createElement('button');
-            addBtn.className = 'add-layer-btn';
-            addBtn.textContent = '+ レイヤー追加';
-            addBtn.onclick = addLayer;
+            addBtn.className = 'add-layer-btn'; addBtn.textContent = '+ レイヤー追加'; addBtn.onclick = addLayer;
             container.appendChild(addBtn);
         }
 
         function switchLayer(index) {
-            currentLayer = index;
-            renderLayerTabs();
-            renderControlBoxes();
-            updateLayerBadge();
-            
-            if (selectedBox !== null) {
-                selectBox(selectedBox);
-            }
+            currentLayer = index; renderLayerTabs(); renderControlBoxes(); updateLayerBadge();
+            if (selectedBox !== null) selectBox(selectedBox);
         }
 
         function addLayer() {
-            const name = prompt('新しいレイヤーの名前:', `Layer${layers.length + 1}`);
+            const name = prompt('レイヤー名:', `Layer${layers.length + 1}`);
             if (name) {
-                const newLayer = { name, boxes: {} };
-                controlBoxes.forEach(box => {
-                    newLayer.boxes[box.id] = '';
-                });
-                layers.push(newLayer);
-                switchLayer(layers.length - 1);
+                const newL = { name, boxes: {} };
+                controlBoxes.forEach(b => { newL.boxes[b.id] = ''; });
+                layers.push(newL); switchLayer(layers.length - 1);
             }
         }
 
         function deleteLayer(index) {
-            if (layers.length <= 1) {
-                alert('最低1つのレイヤーが必要です');
-                return;
-            }
-            if (confirm(`"${layers[index].name}" を削除しますか？`)) {
+            if (layers.length <= 1) return;
+            if (confirm(`"${layers[index].name}" を削除？`)) {
                 layers.splice(index, 1);
-                if (currentLayer >= layers.length) {
-                    currentLayer = layers.length - 1;
-                }
-                renderLayerTabs();
-                renderControlBoxes();
-                updateLayerBadge();
+                currentLayer = Math.min(currentLayer, layers.length - 1);
+                renderLayerTabs(); renderControlBoxes(); updateLayerBadge();
             }
         }
+        function updateLayerBadge() { document.getElementById('layerCount').textContent = layers.length; }
 
-        function updateLayerBadge() {
-            document.getElementById('layerCount').textContent = layers.length;
-        }
-
-        // ==================== CATEGORY SWITCHING ====================
-        function showCategory(category) {
-            document.querySelectorAll('.keycode-quick').forEach(el => {
-                el.classList.remove('visible');
-            });
-            
-            document.querySelectorAll('.category-btn').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            const categoryEl = document.getElementById(category + 'Keycodes');
-            if (categoryEl) {
-                categoryEl.classList.add('visible');
-            }
-            
+        // ==================== CATEGORY / TABS ====================
+        function showCategory(cat) {
+            document.querySelectorAll('.keycode-quick').forEach(el => el.classList.remove('visible'));
+            document.querySelectorAll('.category-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(cat + 'Keycodes').classList.add('visible');
             event.target.classList.add('active');
         }
 
         // キーコードボタンクリック
-        document.querySelectorAll('.keycode-quick').forEach(container => {
-            container.addEventListener('click', (e) => {
+        document.querySelectorAll('.keycode-quick').forEach(c => {
+            c.addEventListener('click', (e) => {
                 if (e.target.classList.contains('keycode-btn')) {
                     const kc = e.target.dataset.kc;
-                    document.getElementById('keycodeInput').value = kc;
-                    updateKeycode(kc);
+                    document.getElementById('keycodeInput').value = kc; updateKeycode(kc);
                 }
             });
         });
 
-        // ==================== TAB SWITCHING ====================
-        function switchTab(tabName) {
-            const tabs = ['save', 'export'];
-            tabs.forEach(tab => {
-                const btn = document.querySelector(`[onclick="switchTab('${tab}')"]`);
-                const content = document.getElementById(tab + 'Tab');
-                if (content && btn) {
-                    if (tab === tabName) {
-                        btn.classList.add('active');
-                        content.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                        content.classList.remove('active');
-                    }
-                }
+        function switchTab(t) {
+            ['save', 'export'].forEach(id => {
+                document.getElementById(id + 'Tab').classList.toggle('active', id === t);
+                document.querySelector(`[onclick="switchTab('${id}')"]`).classList.toggle('active', id === t);
             });
         }
 
-        // ==================== SAVE/LOAD ====================
-        function saveGistToken() {
-            gistToken = document.getElementById('gistToken').value;
-            localStorage.setItem('gist-token-racing', gistToken);
-        }
+        // ==================== SAVE/LOAD (FIXED) ====================
+        function saveGistToken() { gistToken = document.getElementById('gistToken').value; localStorage.setItem('gist-token-racing', gistToken); }
 
         async function saveToGist() {
-            if (!gistToken) {
-                alert('GitHub Personal Access Tokenを入力してください');
-                return;
-            }
-
-            const img = document.getElementById('controllerImage');
-            const data = {
-                layers,
-                controlBoxes,
-                imageData: img.src,
-                imageScale,
-                nextBoxId,
-                colorHistory
-            };
-
-            const gistData = {
-                description: 'Sim Racing Keymap Editor Data',
-                public: false,
-                files: {
-                    'racing-keymap-data.json': {
-                        content: JSON.stringify(data, null, 2)
-                    }
-                }
-            };
-
+            if (!gistToken) { alert('TOKENを入力してください'); return; }
+            const data = { layers, controlBoxes, imageData: document.getElementById('controllerImage').src, imageScale, nextBoxId, colorHistory };
+            const body = { description: 'Racing Keymap', public: false, files: { 'racing-keymap-data.json': { content: JSON.stringify(data, null, 2) } } };
             try {
-                let response;
-                const currentGistId = document.getElementById('gistId').value || gistId;
-                
-                if (currentGistId) {
-                    response = await fetch(`https://api.github.com/gists/${currentGistId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Authorization': `token ${gistToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(gistData)
-                    });
-                } else {
-                    response = await fetch('https://api.github.com/gists', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `token ${gistToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(gistData)
-                    });
-                }
-
-                if (!response.ok) {
-                    throw new Error('Gist保存に失敗しました');
-                }
-
-                const result = await response.json();
-                gistId = result.id;
-                document.getElementById('gistId').value = gistId;
-                localStorage.setItem('gist-id-racing', gistId);
-
-                alert(`✓ Gistに保存しました！\nGist ID: ${gistId}\nURL: ${result.html_url}`);
-            } catch (err) {
-                alert(`エラー: ${err.message}`);
-            }
+                const id = document.getElementById('gistId').value || gistId;
+                const url = id ? `https://api.github.com/gists/${id}` : 'https://api.github.com/gists';
+                const res = await fetch(url, { method: id ? 'PATCH' : 'POST', headers: { 'Authorization': `token ${gistToken}` }, body: JSON.stringify(body) });
+                if (!res.ok) throw new Error('Save failed');
+                const result = await res.json();
+                gistId = result.id; document.getElementById('gistId').value = gistId; localStorage.setItem('gist-id-racing', gistId);
+                alert('Gistに保存成功');
+            } catch (err) { alert(err.message); }
         }
 
         async function loadFromGist() {
-            const inputGistId = document.getElementById('gistId').value || gistId;
-            if (!inputGistId) {
-                alert('Gist IDを入力してください');
-                return;
-            }
-
+            const id = document.getElementById('gistId').value || gistId;
+            if (!id) return;
             try {
-                const response = await fetch(`https://api.github.com/gists/${inputGistId}`);
-                if (!response.ok) {
-                    throw new Error('Gistの読み込みに失敗しました');
-                }
-
-                const result = await response.json();
-                const fileContent = result.files['racing-keymap-data.json'].content;
-                const data = JSON.parse(fileContent);
-
-                layers = data.layers || [];
-                controlBoxes = data.controlBoxes || [];
-                imageScale = data.imageScale || 1.0;
-                nextBoxId = data.nextBoxId || 1;
-                colorHistory = data.colorHistory || [];
-                currentLayer = 0;
-
-                const img = document.getElementById('controllerImage');
-                if (data.imageData) {
-                    img.src = data.imageData;
-                    img.style.display = 'block';
-                }
-
-                gistId = inputGistId;
-                document.getElementById('gistId').value = gistId;
-                localStorage.setItem('gist-id-racing', gistId);
-
-                updateImageScale();
-                renderLayerTabs();
-                renderControlBoxes();
-                updateLayerBadge();
-                renderColorPalette();
-                
-                alert('✓ Gistから読み込みました！');
-            } catch (err) {
-                alert(`エラー: ${err.message}`);
-            }
+                const res = await fetch(`https://api.github.com/gists/${id}`);
+                const result = await res.json();
+                const data = JSON.parse(result.files['racing-keymap-data.json'].content);
+                applyData(data);
+                alert('Gistから読込成功');
+            } catch (err) { alert(err.message); }
         }
 
-
-
-        function clearAll() {
-            if (confirm('全てのデータをクリアしますか？')) {
-                layers = [];
-                controlBoxes = [];
-                selectedBox = null;
-                currentLayer = 0;
-                nextBoxId = 1;
-                imageScale = 1.0;
-                
-                document.getElementById('controllerImage').style.display = 'none';
-                document.getElementById('editorPanel').classList.remove('visible');
-                
-                renderLayerTabs();
-                renderControlBoxes();
-                updateLayerBadge();
-            }
-        }
-
-        // スロット保存機能
         function saveToLocal() {
-            try {
-                const img = document.getElementById('controllerImage');
-                const data = {
-                    layers,
-                    controlBoxes,
-                    imageData: img.src,
-                    imageScale,
-                    nextBoxId,
-                    colorHistory
-                };
-                const jsonString = JSON.stringify(data);
-                localStorage.setItem('sim-racing-keymap', jsonString);
-                alert('✓ ブラウザに保存しました！');
-            } catch (err) {
-                console.error('保存エラー:', err);
-                if (err.name === 'QuotaExceededError') {
-                    alert('❌ 保存容量を超えています。画像サイズが大きすぎる可能性があります。');
-                } else {
-                    alert('❌ 保存に失敗しました: ' + err.message);
-                }
-            }
+            const data = { layers, controlBoxes, imageData: document.getElementById('controllerImage').src, imageScale, nextBoxId, colorHistory };
+            localStorage.setItem('sim-racing-keymap', JSON.stringify(data));
+            alert('保存完了');
         }
 
         function loadFromLocal() {
-            try {
-                const saved = localStorage.getItem('sim-racing-keymap');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    layers = data.layers || [];
-                    controlBoxes = data.controlBoxes || [];
-                    imageScale = data.imageScale || 1.0;
-                    nextBoxId = data.nextBoxId || 1;
-                    colorHistory = data.colorHistory || [];
-                    currentLayer = 0;
-
-                    const img = document.getElementById('controllerImage');
-                    if (data.imageData) {
-                        img.src = data.imageData;
-                        img.style.display = 'block';
-                    }
-
-                    updateImageScale();
-                    renderLayerTabs();
-                    renderControlBoxes();
-                    updateLayerBadge();
-                    renderColorPalette();
-                    
-                    alert('✓ ブラウザから読み込みました！');
-                } else {
-                    alert('保存されたデータがありません');
-                }
-            } catch (err) {
-                console.error('読込エラー:', err);
-                alert('❌ 読み込みに失敗しました: ' + err.message);
-            }
+            const saved = localStorage.getItem('sim-racing-keymap');
+            if (saved) { applyData(JSON.parse(saved)); alert('読込完了'); }
         }
 
         function saveToLocalSlot() {
-            try {
-                const slot = document.getElementById('saveSlot').value;
-                const img = document.getElementById('controllerImage');
-                const data = {
-                    layers,
-                    controlBoxes,
-                    imageData: img.src,
-                    imageScale,
-                    nextBoxId,
-                    colorHistory,
-                    savedAt: new Date().toISOString()
-                };
-                const jsonString = JSON.stringify(data);
-                localStorage.setItem(`sim-racing-keymap-${slot}`, jsonString);
-                
-                const slotName = document.getElementById('saveSlot').selectedOptions[0].text;
-                alert(`✓ ${slotName}に保存しました！`);
-            } catch (err) {
-                console.error('保存エラー:', err);
-                if (err.name === 'QuotaExceededError') {
-                    alert('❌ 保存容量を超えています。');
-                } else {
-                    alert('❌ 保存に失敗しました: ' + err.message);
-                }
-            }
+            const slot = document.getElementById('saveSlot').value;
+            const data = { layers, controlBoxes, imageData: document.getElementById('controllerImage').src, imageScale, nextBoxId, colorHistory };
+            localStorage.setItem(`sim-racing-keymap-${slot}`, JSON.stringify(data));
+            alert(`${slot}に保存完了`);
         }
 
         function loadFromLocalSlot() {
-            try {
-                const slot = document.getElementById('saveSlot').value;
-                const saved = localStorage.getItem(`sim-racing-keymap-${slot}`);
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    layers = data.layers || [];
-                    controlBoxes = data.controlBoxes || [];
-                    imageScale = data.imageScale || 1.0;
-                    nextBoxId = data.nextBoxId || 1;
-                    colorHistory = data.colorHistory || [];
-                    currentLayer = 0;
+            const slot = document.getElementById('saveSlot').value;
+            const saved = localStorage.getItem(`sim-racing-keymap-${slot}`);
+            if (saved) { applyData(JSON.parse(saved)); alert(`${slot}読込完了`); }
+        }
 
-                    const img = document.getElementById('controllerImage');
-                    if (data.imageData) {
-                        img.src = data.imageData;
-                        img.style.display = 'block';
-                    }
+        function applyData(data) {
+            layers = data.layers || [];
+            controlBoxes = data.controlBoxes || [];
+            imageScale = data.imageScale || 1.0;
+            refreshNextBoxId(data.nextBoxId); // ID復元
+            colorHistory = data.colorHistory || [];
+            const img = document.getElementById('controllerImage');
+            if (data.imageData) { img.src = data.imageData; img.style.display = 'block'; }
+            updateImageScale(); renderLayerTabs(); renderControlBoxes(); updateLayerBadge(); renderColorPalette();
+        }
 
-                    updateImageScale();
-                    renderLayerTabs();
-                    renderControlBoxes();
-                    updateLayerBadge();
-                    renderColorPalette();
-                    
-                    const slotName = document.getElementById('saveSlot').selectedOptions[0].text;
-                    alert(`✓ ${slotName}から読み込みました！`);
-                } else {
-                    const slotName = document.getElementById('saveSlot').selectedOptions[0].text;
-                    alert(`${slotName}には保存されたデータがありません`);
-                }
-            } catch (err) {
-                console.error('読込エラー:', err);
-                alert('❌ 読み込みに失敗しました: ' + err.message);
+        function clearAll() {
+            if (confirm('全クリア？')) {
+                layers = []; controlBoxes = []; selectedBox = null; currentLayer = 0; nextBoxId = 1;
+                document.getElementById('controllerImage').style.display = 'none';
+                renderLayerTabs(); renderControlBoxes(); updateLayerBadge();
             }
         }
 
         function deleteLocalSlot() {
             const slot = document.getElementById('saveSlot').value;
-            const slotName = document.getElementById('saveSlot').selectedOptions[0].text;
-            if (confirm(`${slotName}のデータを削除しますか？`)) {
-                localStorage.removeItem(`sim-racing-keymap-${slot}`);
-                alert(`✓ ${slotName}を削除しました`);
-            }
+            localStorage.removeItem(`sim-racing-keymap-${slot}`); alert(`${slot}削除`);
         }
 
         // ==================== EXPORT ====================
         function exportJSON() {
-            const img = document.getElementById('controllerImage');
-            const data = {
-                layers,
-                controlBoxes,
-                imageData: img.src,
-                imageScale
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            downloadBlob(blob, 'racing-keymap.json');
+            const data = { layers, controlBoxes, imageData: document.getElementById('controllerImage').src, imageScale, nextBoxId };
+            downloadBlob(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), 'racing-keymap.json');
         }
 
         function exportCSV() {
-            let csv = 'Button ID,X,Y,Width,Height';
-            layers.forEach(layer => {
-                csv += `,${layer.name}`;
+            let csv = 'ID,X,Y,W,H' + layers.map(l => ',' + l.name).join('') + '\n';
+            controlBoxes.forEach(b => {
+                csv += `${b.id},${b.x},${b.y},${b.width},${b.height}` + layers.map(l => ',' + (l.boxes[b.id] || '')).join('') + '\n';
             });
-            csv += '\n';
-
-            controlBoxes.forEach(box => {
-                csv += `${box.id},${box.x},${box.y},${box.width},${box.height}`;
-                layers.forEach(layer => {
-                    csv += `,${layer.boxes[box.id] || ''}`;
-                });
-                csv += '\n';
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            downloadBlob(blob, 'racing-keymap.csv');
+            downloadBlob(new Blob([csv], { type: 'text/csv' }), 'racing-keymap.csv');
         }
 
         function exportText() {
-            let text = 'Sim Racing Keymap Configuration\n';
-            text += '='.repeat(50) + '\n\n';
-
-            layers.forEach((layer, idx) => {
-                text += `[Layer ${idx}: ${layer.name}]\n`;
-                text += '-'.repeat(50) + '\n';
-                
-                controlBoxes.forEach(box => {
-                    const keycode = layer.boxes[box.id] || '-';
-                    text += `Button ${box.id}: ${keycode}\n`;
-                });
-                text += '\n';
-            });
-
-            const blob = new Blob([text], { type: 'text/plain' });
-            downloadBlob(blob, 'racing-keymap.txt');
+            let txt = 'Sim Racing Keymap\n' + layers.map((l, i) => `[Layer ${i}: ${l.name}]\n` + controlBoxes.map(b => `BTN ${b.id}: ${l.boxes[b.id] || '-'}`).join('\n')).join('\n\n');
+            downloadBlob(new Blob([txt], { type: 'text/plain' }), 'racing-keymap.txt');
         }
 
-        function downloadBlob(blob, filename) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+        function downloadBlob(blob, name) {
+            const url = URL.createObjectURL(blob); const a = document.createElement('a');
+            a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
         }
 
-        // ==================== INITIALIZATION ====================
-        renderLayerTabs();
-        updateLayerBadge();
-        loadLocalPngImages();
-        renderColorPalette();
+        renderLayerTabs(); updateLayerBadge(); loadLocalPngImages(); renderColorPalette();
     </script>
 </body>
 </html>
