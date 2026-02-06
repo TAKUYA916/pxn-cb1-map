@@ -1255,19 +1255,6 @@
             const currentLayerData = layers[currentLayer];
             if (!currentLayerData) return;
 
-            // ===== 背景クリックで選択解除 =====
-document.getElementById('layoutContainer').addEventListener('pointerdown', (e) => {
-
-    // control-box をクリックした場合は無視
-    if (e.target.closest('.control-box')) return;
-
-    selectedBox = null;
-
-    document.getElementById('editorPanel').classList.remove('visible');
-
-    renderControlBoxes();
-});
-
             controlBoxes.forEach(box => {
                 const el = document.createElement('div');
                 el.className = 'control-box'; el.classList.add(box.shape || 'rectangle');
@@ -1634,6 +1621,14 @@ document.addEventListener('touchmove', (e) => {
         }
 
         renderLayerTabs(); updateLayerBadge(); loadLocalPngImages(); renderColorPalette();
+        // ===== 背景クリックで選択解除（1回だけ登録）=====
+document.getElementById('layoutContainer').addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.control-box')) return;
+
+    selectedBox = null;
+    document.getElementById('editorPanel').classList.remove('visible');
+    renderControlBoxes();
+});
     </script>
 </body>
 </html>
