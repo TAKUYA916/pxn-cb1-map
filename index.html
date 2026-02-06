@@ -559,16 +559,15 @@
             background: rgba(255, 136, 0, 0.2);
             border-color: #ff8800;
         }
-        .resize-handle {
+   .resize-handle {
     position: absolute;
-    width: 14px;
-    height: 14px;
+    width: 24px;
+    height: 24px;
     background: #00ff88;
-    right: -7px;
-    bottom: -7px;
     border-radius: 50%;
-    cursor: nwse-resize;
+    border: 2px solid #000;
     touch-action: none;
+    z-index: 2000;
 }
     </style>
 </head>
@@ -1270,38 +1269,80 @@
                 // クリックで選択
 
                 el.onclick = (e) => { e.stopPropagation(); selectBox(box.id); };
-                // ===== リサイズハンドル =====
+// ===== 4角リサイズハンドル =====
 if (selectedBox === box.id) {
-    const handle = document.createElement('div');
-    handle.className = 'resize-handle';
 
-    handle.onpointerdown = (e) => {
-        e.stopPropagation();
-        e.preventDefault();
+    const createHandle = (cursor, left, top, mode) => {
+        const h = document.createElement('div');
+        h.className = 'resize-handle';
+        h.style.cursor = cursor;
+        h.style.left = left;
+        h.style.top = top;
 
-        clearTimeout(longPressTimer);
+        h.onpointerdown = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            clearTimeout(longPressTimer);
 
-        const startX = e.clientX;
-        const startY = e.clientY;
-        const startW = box.width;
-        const startH = box.height;
+            const startX = e.clientX;
+            const startY = e.clientY;
 
-        const move = (ev) => {
-            box.width = Math.max(20, startW + (ev.clientX - startX) / imageScale);
-            box.height = Math.max(20, startH + (ev.clientY - startY) / imageScale);
-            renderControlBoxes();
+            const startW = box.width;
+            const startH = box.height;
+            const startPosX = box.x;
+            const startPosY = box.y;
+
+            const move = (ev) => {
+                const dx = (ev.clientX - startX) / imageScale;
+                const dy = (ev.clientY - startY) / imageScale;
+
+                // 右下
+                if (mode === 'se') {
+                    box.width = startW + dx;
+                    box.height = startH + dy;
+                }
+                // 左上
+                if (mode === 'nw') {
+                    box.width = startW - dx;
+                    box.height = startH - dy;
+                    box.x = startPosX + dx;
+                    box.y = startPosY + dy;
+                }
+                // 右上
+                if (mode === 'ne') {
+                    box.width = startW + dx;
+                    box.height = startH - dy;
+                    box.y = startPosY + dy;
+                }
+                // 左下
+                if (mode === 'sw') {
+                    box.width = startW - dx;
+                    box.height = startH + dy;
+                    box.x = startPosX + dx;
+                }
+
+                box.width = Math.max(20, box.width);
+                box.height = Math.max(20, box.height);
+
+                renderControlBoxes();
+            };
+
+            const up = () => {
+                document.removeEventListener('pointermove', move);
+                document.removeEventListener('pointerup', up);
+            };
+
+            document.addEventListener('pointermove', move);
+            document.addEventListener('pointerup', up);
         };
 
-        const up = () => {
-            document.removeEventListener('pointermove', move);
-            document.removeEventListener('pointerup', up);
-        };
-
-        document.addEventListener('pointermove', move);
-        document.addEventListener('pointerup', up);
+        return h;
     };
 
-    el.appendChild(handle);
+    el.appendChild(createHandle('nwse-resize', '-12px', '-12px', 'nw'));
+    el.appendChild(createHandle('nesw-resize', 'calc(100% - 12px)', '-12px', 'ne'));
+    el.appendChild(createHandle('nesw-resize', '-12px', 'calc(100% - 12px)', 'sw'));
+    el.appendChild(createHandle('nwse-resize', 'calc(100% - 12px)', 'calc(100% - 12px)', 'se'));
 }
                 // ドラッグ開始
                 el.onpointerdown = (e) => {
