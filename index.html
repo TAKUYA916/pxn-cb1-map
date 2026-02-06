@@ -559,6 +559,17 @@
             background: rgba(255, 136, 0, 0.2);
             border-color: #ff8800;
         }
+        .resize-handle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #00ff88;
+    right: -7px;
+    bottom: -7px;
+    border-radius: 50%;
+    cursor: nwse-resize;
+    touch-action: none;
+}
     </style>
 </head>
 <body>
@@ -1259,6 +1270,39 @@
                 // クリックで選択
 
                 el.onclick = (e) => { e.stopPropagation(); selectBox(box.id); };
+                // ===== リサイズハンドル =====
+if (selectedBox === box.id) {
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+
+    handle.onpointerdown = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        clearTimeout(longPressTimer);
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startW = box.width;
+        const startH = box.height;
+
+        const move = (ev) => {
+            box.width = Math.max(20, startW + (ev.clientX - startX) / imageScale);
+            box.height = Math.max(20, startH + (ev.clientY - startY) / imageScale);
+            renderControlBoxes();
+        };
+
+        const up = () => {
+            document.removeEventListener('pointermove', move);
+            document.removeEventListener('pointerup', up);
+        };
+
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', up);
+    };
+
+    el.appendChild(handle);
+}
                 // ドラッグ開始
                 el.onpointerdown = (e) => {
                     // ----- 長押しコピー -----
@@ -1292,6 +1336,11 @@ longPressTimer = setTimeout(() => {
         }
 
         document.addEventListener('pointermove', (e) => {
+            // ドラッグ開始したら長押しキャンセル
+       
+            if (isDragging) {                
+            clearTimeout(longPressTimer);
+            }
             // ----- ピンチリサイズ -----
             if (!isDragging || selectedBox === null) return;
             const box = controlBoxes.find(b => b.id === selectedBox);
