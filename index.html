@@ -1269,7 +1269,7 @@ longPressTimer = setTimeout(() => {
     layers.forEach(l => { l.boxes[newBox.id] = l.boxes[box.id] || ''; });
     selectBox(newBox.id);
     renderControlBoxes();
-}1200);
+}, 1200);
                     if (e.button !== 0) return; e.preventDefault();
                     // Ctrl押下でコピーモード
                     if (e.ctrlKey || e.metaKey) {
@@ -1293,7 +1293,16 @@ longPressTimer = setTimeout(() => {
 
         document.addEventListener('pointermove', (e) => {
             // ----- ピンチリサイズ -----
-// ================== タッチ：ピンチリサイズ ==================
+            if (!isDragging || selectedBox === null) return;
+            const box = controlBoxes.find(b => b.id === selectedBox);
+            if (!box) return;
+            box.x = Math.round(dragBoxStartX + (e.clientX - dragStartX) / imageScale);
+            box.y = Math.round(dragBoxStartY + (e.clientY - dragStartY) / imageScale);
+            document.getElementById('boxX').value = box.x;
+            document.getElementById('boxY').value = box.y;
+            renderControlBoxes();
+        });
+        // ================== タッチ：ピンチリサイズ ==================
 document.addEventListener('touchmove', (e) => {
     if (e.touches.length !== 2 || selectedBox === null) return;
 
@@ -1315,15 +1324,6 @@ document.addEventListener('touchmove', (e) => {
 
     renderControlBoxes();
 }, { passive:false });
-            if (!isDragging || selectedBox === null) return;
-            const box = controlBoxes.find(b => b.id === selectedBox);
-            if (!box) return;
-            box.x = Math.round(dragBoxStartX + (e.clientX - dragStartX) / imageScale);
-            box.y = Math.round(dragBoxStartY + (e.clientY - dragStartY) / imageScale);
-            document.getElementById('boxX').value = box.x;
-            document.getElementById('boxY').value = box.y;
-            renderControlBoxes();
-        });
 
         document.addEventListener('pointerup', () => {
     isDragging = false;
