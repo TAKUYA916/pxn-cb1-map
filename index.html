@@ -501,6 +501,10 @@
             padding: 8px;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 6px;
+            max-height: 70vh;
+    overflow-y: auto;
+    touch-action: auto;
+    -webkit-overflow-scrolling: touch;
         }
 
         .palette-color {
@@ -1444,7 +1448,9 @@ document.addEventListener('touchmove', (e) => {
                 else if (e.key === 'ArrowUp') box.y -= 1;
                 else return;
             }
-            e.preventDefault();
+            if (!e.target.closest('#colorPalette')) {
+    e.preventDefault();
+}
             document.getElementById('boxX').value = box.x; document.getElementById('boxY').value = box.y;
             document.getElementById('boxWidth').value = box.width; document.getElementById('boxHeight').value = box.height;
             renderControlBoxes();
