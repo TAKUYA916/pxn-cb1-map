@@ -160,6 +160,11 @@
             word-break: break-all;
             overflow: hidden;
         }
+        /* ===== タッチ操作対応 ===== */
+            .layout-wrapper,
+            .control-box{
+            touch-action: none;
+        }
 
         .control-box.circle {
             border-radius: 50%;
@@ -1252,7 +1257,7 @@
 
                 el.onclick = (e) => { e.stopPropagation(); selectBox(box.id); };
                 // ドラッグ開始
-                el.onmousedown = (e) => {
+                el.onpointerdown = (e) => {
                     if (e.button !== 0) return; e.preventDefault();
                     // Ctrl押下でコピーモード
                     if (e.ctrlKey || e.metaKey) {
@@ -1274,7 +1279,7 @@
             });
         }
 
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('pointermove', (e) => {
             if (!isDragging || selectedBox === null) return;
             const box = controlBoxes.find(b => b.id === selectedBox);
             if (!box) return;
@@ -1285,7 +1290,7 @@
             renderControlBoxes();
         });
 
-        document.addEventListener('mouseup', () => { isDragging = false; isCopying = false; });
+        document.addEventListener('pointerup', () => { isDragging = false; isCopying = false; });
 
         // キーボードナビゲーション
         document.addEventListener('keydown', (e) => {
